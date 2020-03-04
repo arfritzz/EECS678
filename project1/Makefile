@@ -1,5 +1,6 @@
-quash: main.c
-	gcc -o quash main.c -I. 
+all: 
+	gcc -Wall -o quash main.c 
+	gcc -Wall -DLAB_CODE -o quash main.c
 
-run: quash
+test: all
 	./quash 
