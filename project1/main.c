@@ -13,7 +13,9 @@
 
 int got_response = 0;
 char** PATH;
+int path_Size = 0;
 char* HOME;
+char* commandChecker;
 //char* command_SET = "set";
 
 int main(int argc, char **argv, char **envp) {
@@ -34,21 +36,26 @@ int main(int argc, char **argv, char **envp) {
 		fflush(stdout);
 		fgets(command, sizeof(command), stdin);
 
-		char* commandChecker = strtok(command, delim);
+		commandChecker = strtok(command, delim);
 
 		printf("%s\n", commandChecker);
 
+
+		// check Commands
 		if(strcmp(commandChecker,"set") == 0){
 			char* parameterChecker = commandChecker;
 			parameterChecker = strtok (NULL, delim2);
 			printf("%s\n", parameterChecker);
 
 
+			// change PATH location
 			if(strcmp(parameterChecker,"PATH") == 0){
 				char* pathChecker = parameterChecker;
 				pathChecker = strtok (NULL, delim3);
+
+				// used to get locations of all paths
 				do {
-					printf("%s fda\n", pathChecker);
+					printf("%s\n", pathChecker);
 					if(pathChecker = strtok (NULL, delim3)){
 						//continue
 					}
@@ -56,20 +63,40 @@ int main(int argc, char **argv, char **envp) {
 						pathChecker = NULL;
 					}
 				} while(pathChecker != NULL);
+
+
 			}
 
-
+			// change HOME location
 			else if(strcmp(parameterChecker,"HOME") == 0){
 
 			}
 
-
+			// INVALID set parameter
 			else {
-
+				printf("Invalid parameter\n");
 			}
 
 
 		}
+
+		//other Commands
+		else if(strcmp(commandChecker,"cd") == 0){
+
+		}
+
+		else if(strcmp(commandChecker,"quit") == 0){
+			exit(0);
+		}
+
+		else if(strcmp(commandChecker,"exit") == 0){
+			exit(0);
+		}
+
+		else if(strcmp(commandChecker,"jobs") == 0){
+
+		}
+
 		else{
 			printf("ALSOPOOP\n");
 		}
