@@ -59,23 +59,26 @@ void parse_Input(char* command){
 			printf("%s\n", command);
 			if(strncmp(command,"/",1) == 0){
 
-				char* newCommand;
-				int pathSize = 0;
-				while(!hasSpaces(command[0])){
-					command++;
-					pathSize++;
-				}
+				char* tempCommand = strcpy(tempCommand, command);
+				char* newPath = strtok(tempCommand," ");
+				command += strlen(newPath);
+				command++;
 				printf("command: %s\n", command);
-				printf("new Command: %s\n", newCommand);
-				newCommand[pathSize] = '\0';
-				while(hasSpaces(command[0])){
-					command++;
-				}
+				printf("new Path: %s\n", newPath);
+				command = '\0';
+				strcat(relPath,":");
+				strcat(relPath,newPath);
 
-				printf("%s\n", relPath);
+				if((setenv("PATH",relPath,0))< 0){
+					printf("path set error\n");
+				}
+				else {
+					relPath = getenv("PATH");
+					printf("new PATH variable: %s\n", relPath);
+				}
 			}
 
-				// Invalid path syntax
+			// Invalid path syntax
 			else{
 				printf("Invalid path syntax\n");
 			}
@@ -89,13 +92,38 @@ void parse_Input(char* command){
 
 		// change HOME location
 		else if(strncmp(command,"HOME",4) == 0){
+			
+			command += 4;
+			while(hasSpaces(command[0])){
+				command++;
+			}
 
+			//GET NEW HOME PATH
+			if(strncmp(command,"/",1) == 0){
+
+				char* tempCommand = strcpy(tempCommand, command);
+				char* newPath = strtok(tempCommand," ");
+				command += strlen(newPath);
+				command++;
+				printf("command: %s\n", command);
+				printf("new Path: %s\n", newPath);
+
+				setenv("HOME",newPath,0);
+				homePath = getenv("HOME");
+				printf("%s\n", homePath);
+			}
+
+			else {
+				printf("Invalid path syntax, try again\n");
+			}
 		}
 
 		// INVALID set parameter
 		else {
 			printf("Invalid parameter\n");
 		}
+
+		command = "\0";
 
 	}
 
@@ -151,10 +179,6 @@ int main(int argc, char **argv, char **envp) {
 	else {
 		while(1){
 			int inputStart = 0;
-			char delim[] = " ";
-			char delim2[] = "=";
-			char delim3[] = ":";
-			char delim4[] = "/";
 
 			printf("#> ");
 			fflush(stdout);
