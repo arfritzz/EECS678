@@ -15,6 +15,11 @@ int got_response = 0;
 char* relPath;
 int path_Size = 0;
 char* homePath;
+
+//used to keep track of 
+//current path for cd
+char* currentPath;
+char* initalHome;
 char* command;
 //char* command_SET = "set";
 
@@ -127,9 +132,43 @@ void parse_Input(char* command){
 
 	}
 
-		//NEXT COMMAND - CHANGE DIRECTORY
+	//NEXT COMMAND - CHANGE DIRECTORY
 	else if(strncmp(command,"cd",2) == 0){
+		//chdir(const char *path) changes current directory to 
+		//the directory specified in path
 
+		//account for the cd and the space
+		command += 3;
+
+		//if no command given, return
+		//to home directory
+		
+		printf("command: %s\n", command);
+		
+		if (command[0] == '\0') {
+			
+			chdir("..");
+			//printf("no path added");
+		}
+
+		//otherwise set the real path
+		else {
+			char* tempPath;
+		        tempPath = homePath;
+			char backslash[1024] = "/";
+			strcat(backslash,command);
+			strcat(tempPath,backslash);
+			printf("direct: %s\n", tempPath);
+			int ret = chdir(tempPath);
+                        if (ret == -1) {
+                                printf("Change directory unsuccessful. Please try again\n");
+                        }
+			//printf("path");
+		}
+			printf("inital: %s\n", initalHome);
+
+			printf("current: %s\n", currentPath);
+			printf("home: %s\n", homePath);
 	}
 
 	else if(strncmp(command,"quit",4) == 0){
@@ -176,7 +215,12 @@ int main(int argc, char **argv, char **envp) {
 		}
 	}
 
+
 	else {
+	        currentPath = getenv("HOME");
+	        homePath = getenv("HOME");
+		initalHome = homePath;
+		relPath = getenv("PATH");	
 		while(1){
 			int inputStart = 0;
 
@@ -184,10 +228,10 @@ int main(int argc, char **argv, char **envp) {
 			fflush(stdout);
 			fgets(input, sizeof(input), stdin);
 
-			relPath = getenv("PATH");
+			//relPath = getenv("PATH");
 			//printf("%s\n", relPath);
-			homePath = getenv("HOME");
-			//printf("%s\n", homePath);
+			//homePath = getenv("HOME");
+			printf("%s\n", homePath);
 
 			//Ensure input is good
 			if(strlen(input) > 0 && input[strlen(input)-1] == '\n'){
