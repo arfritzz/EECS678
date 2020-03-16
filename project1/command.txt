@@ -1,1 +1,1 @@
-set PATH=/usr/bin:/bin
+set PATH /usr/home

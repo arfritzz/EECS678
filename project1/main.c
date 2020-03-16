@@ -33,88 +33,144 @@ void set_Path(char* newPath){
 	}
 }
 
+void parse_Input(char* command){
+	while(hasSpaces(command[0])){
+		command++;
+	}
+
+	// check Commands
+
+	// FIRST COMMAND - SET
+	if(strncmp(command,"set",3) == 0){
+	//do ++ on command
+	//printf("%s\n", command);
+	command += 4;
+
+		// change PATH location
+		if(strncmp(command,"PATH",4) == 0){
+			// used to get locations of all paths
+			//remove PATH from command, remove following spaces
+			command += 4;
+			while(hasSpaces(command[0])){
+				command++;
+			}
+			//remove actual pathway from command, characters
+			//between spaces
+			printf("%s\n", command);
+			if(strncmp(command,"/",1) == 0){
+
+				char* newCommand;
+				int pathSize = 0;
+				while(!hasSpaces(command[0])){
+					command++;
+					pathSize++;
+				}
+				printf("command: %s\n", command);
+				printf("new Command: %s\n", newCommand);
+				newCommand[pathSize] = '\0';
+				while(hasSpaces(command[0])){
+					command++;
+				}
+
+				printf("%s\n", relPath);
+			}
+
+				// Invalid path syntax
+			else{
+				printf("Invalid path syntax\n");
+			}
+
+		}
+	
+
+		else if(strncmp(command,"path",4) == 0){
+			printf("Invalid syntax, perhaps: set PATH\n");
+		}
+
+		// change HOME location
+		else if(strncmp(command,"HOME",4) == 0){
+
+		}
+
+		// INVALID set parameter
+		else {
+			printf("Invalid parameter\n");
+		}
+
+	}
+
+		//NEXT COMMAND - CHANGE DIRECTORY
+	else if(strncmp(command,"cd",2) == 0){
+
+	}
+
+	else if(strncmp(command,"quit",4) == 0){
+		exit(0);
+	}
+
+	else if(strncmp(command,"exit",4) == 0){
+		exit(0);
+	}
+
+	else if(strncmp(command,"jobs",4) == 0){
+
+	}
+
+	//RUNNING EXECUTABLES
+	else if(strncmp(command,"./",2) == 0){
+
+	}
+
+	else{
+		printf("ALSOPOOP\n");
+	}
+}
+
 
 int main(int argc, char **argv, char **envp) {
-	pid_t my_pid;
-	my_pid = getpid();
+	char input[64];
+	char* inputBuffer[32];
+	//pid_t my_pid;
+	//my_pid = getpid();
 	// for(int i=0; i<sizeof(envp); i++){
 	// 	printf("%s\n", envp[i]);
 	// }
 
-	while(1){
-		char input[64];
-		int inputStart = 0;
-		char delim[] = " ";
-		char delim2[] = "=";
-		char delim3[] = ":";
-		char delim4[] = "/";
+	if(argv[1] != NULL){
+		if(strcmp(argv[1], "<")){
+			printf("Running commands from: %s\n", argv[2]);
+			FILE* inputFile = fopen(argv[2], "r");
 
-		printf("#> ");
-		fflush(stdout);
-		fgets(input, sizeof(input), stdin);
-
-		relPath = getenv("PATH");
-		printf("%s\n", relPath);
-
-		homePath = getenv("HOME");
-		printf("%s\n", homePath);
-
-
-		if(strlen(input) > 0 && input[strlen(input)-1] == '\n'){
-			input[strlen(input)-1] = '\0';
+			if(inputFile == 0){
+				printf("Invalid input file, try again\n");
+				exit(1);
+			}
 		}
+	}
 
-		command = input;
+	else {
+		while(1){
+			int inputStart = 0;
+			char delim[] = " ";
+			char delim2[] = "=";
+			char delim3[] = ":";
+			char delim4[] = "/";
 
-		while(hasSpaces(command[0])){
-			command++;
-		}
+			printf("#> ");
+			fflush(stdout);
+			fgets(input, sizeof(input), stdin);
 
-		// check Commands
-		if(strncmp(command,"set",3) == 0){
-			//do ++ on command
-			printf("%s\n", command);
-			command += 4;
+			relPath = getenv("PATH");
+			//printf("%s\n", relPath);
+			homePath = getenv("HOME");
+			//printf("%s\n", homePath);
 
-			// change PATH location
-			if(strncmp(command,"PATH",4) == 0){
-				// used to get locations of all paths
-				printf("HERE\n");
-
+			//Ensure input is good
+			if(strlen(input) > 0 && input[strlen(input)-1] == '\n'){
+				input[strlen(input)-1] = '\0';
 			}
 
-			// change HOME location
-			else if(strncmp(command,"HOME",4) == 0){
-
-			}
-
-			// INVALID set parameter
-			else {
-				printf("Invalid parameter\n");
-			}
-
-
-		}
-
-		//other Commands
-		else if(strncmp(command,"cd",2) == 0){
-
-		}
-
-		else if(strncmp(command,"quit",4) == 0){
-			exit(0);
-		}
-
-		else if(strncmp(command,"exit",4) == 0){
-			exit(0);
-		}
-
-		else if(strncmp(command,"jobs",4) == 0){
-
-		}
-
-		else{
-			printf("ALSOPOOP\n");
+			parse_Input(input);
 		}
 	}
 }
