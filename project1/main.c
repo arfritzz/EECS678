@@ -18,8 +18,8 @@ char* homePath;
 
 //used to keep track of 
 //current path for cd
-char* currentPath;
-char* initalHome;
+char* cwd;
+
 char* command;
 //char* command_SET = "set";
 
@@ -138,37 +138,42 @@ void parse_Input(char* command){
 		//the directory specified in path
 
 		//account for the cd and the space
-		command += 3;
+		command += 2;
 
 		//if no command given, return
 		//to home directory
 		
-		printf("command: %s\n", command);
 		
-		if (command[0] == '\0') {
+		if (command[1] == '\0') {
 			
-			chdir("..");
-			//printf("no path added");
+			chdir(getenv("HOME"));
+			printf("You are now at: %s\n", getenv("HOME"));
 		}
 
 		//otherwise set the real path
 		else {
-			char* tempPath;
-		        tempPath = homePath;
-			char backslash[1024] = "/";
-			strcat(backslash,command);
-			strcat(tempPath,backslash);
-			printf("direct: %s\n", tempPath);
-			int ret = chdir(tempPath);
-                        if (ret == -1) {
-                                printf("Change directory unsuccessful. Please try again\n");
-                        }
-			//printf("path");
-		}
-			printf("inital: %s\n", initalHome);
+			//find the previous directory
+			//this will become the new working directory
+			char* prevDirectory = getcwd(NULL,1024);
+			
+			//add a / where the space was
+			//mark the end of the string	
+			command[0] = '/';
+			command[strlen(command)] = '\0';
+			
+			strcat(prevDirectory, command);	
 
-			printf("current: %s\n", currentPath);
-			printf("home: %s\n", homePath);
+			int ret = chdir(prevDirectory);
+                
+			// if the directory doesnt exist then error
+			if (ret == -1) {
+                                printf("Change directory unsuccessful.\nPlease try again\n");
+                        }
+			else {
+				printf("You changed directories to:\n%s\n", prevDirectory);
+			}
+
+		}
 	}
 
 	else if(strncmp(command,"quit",4) == 0){
@@ -217,9 +222,8 @@ int main(int argc, char **argv, char **envp) {
 
 
 	else {
-	        currentPath = getenv("HOME");
 	        homePath = getenv("HOME");
-		initalHome = homePath;
+		//initalHome = homePath;
 		relPath = getenv("PATH");	
 		while(1){
 			int inputStart = 0;
@@ -231,7 +235,7 @@ int main(int argc, char **argv, char **envp) {
 			//relPath = getenv("PATH");
 			//printf("%s\n", relPath);
 			//homePath = getenv("HOME");
-			printf("%s\n", homePath);
+			//printf("%s\n", homePath);
 
 			//Ensure input is good
 			if(strlen(input) > 0 && input[strlen(input)-1] == '\n'){
