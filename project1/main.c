@@ -123,7 +123,6 @@ void parse_Input(char* command){
 			}
 		}
 
-		// INVALID set parameter
 		else {
 			printf("Invalid parameter\n");
 		}
@@ -187,6 +186,29 @@ void parse_Input(char* command){
 	else if(strncmp(command,"jobs",4) == 0){
 
 	}
+	
+	//INPUT OUTPUT REDIRECTION
+        //redirect input
+	else if (index(command, '<') != NULL) {
+		
+		char* rightArg = strrchr(command, '<');
+		rightArg += 2;
+		printf("The right arg is: %s\n", rightArg);
+		printf("the command is: %s\n", command);
+	}
+
+	//redirect output
+	else if (strstr(command, ">")) {
+
+
+	}
+
+
+	//PIPING
+	else if (strstr(command, "|")) {
+
+	}
+
 
 	//RUNNING EXECUTABLES
 	else if(strncmp(command,"./",2) == 0){
