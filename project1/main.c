@@ -21,6 +21,7 @@ char* homePath;
 char* cwd;
 
 char* command;
+void parse_Input(char* command);
 //char* command_SET = "set";
 
 bool hasSpaces(char c){
@@ -37,6 +38,71 @@ void set_Path(char* newPath){
 
 	}
 }
+
+bool redirectOut (char* command) {
+	//left argument
+	char leftArg[64];
+	int position = 0;
+	while (command[position] != '>') {
+		leftArg[position] = command[position];
+		position++;
+	}
+	leftArg[position-1] = '\0';
+	printf("The left arg is: %s\n", leftArg);
+
+	//right argument
+	char* rightArg = strrchr(command, '>');
+	rightArg += 2;
+	printf("The right arg is: %s\n", rightArg);
+
+}
+
+bool redirectIn (char* command) {
+	//left argument
+        char leftArg[64];
+        int position = 0;
+        while (command[position] != '<') {
+                leftArg[position] = command[position];
+                position++;
+        }       
+        leftArg[position-1] = '\0'; 
+        printf("The left arg is: %s\n", leftArg);
+
+        //right argument
+        char* filename = strrchr(command, '<');
+        filename += 2;
+        printf("The right arg is: %s\n", filename);
+
+        //send result of left arg to right arg destination
+        int finalfile = dup(0);
+	freopen(filename, "r", stdin);
+	parse_Input(leftArg);
+	stdin = fdopen(finalfile, "r");
+
+}
+
+bool pipeing (char* command) {
+	//left argument
+        char leftArg[64];
+        int position = 0;
+        while (command[position] != '|') {
+                leftArg[position] = command[position];
+                position++;
+        }       
+        leftArg[position-1] = '\0'; 
+        printf("The left arg is: %s\n", leftArg);
+
+        //right argument
+        char* rightArg = strrchr(command, '|');
+        rightArg += 2;
+        printf("The right arg is: %s\n", rightArg);
+
+	int fdpipe[2];
+	pipe(fdpipe);
+
+}
+
+
 
 void parse_Input(char* command){
 	while(hasSpaces(command[0])){
@@ -190,17 +256,12 @@ void parse_Input(char* command){
 	//INPUT OUTPUT REDIRECTION
         //redirect input
 	else if (index(command, '<') != NULL) {
-		
-		char* rightArg = strrchr(command, '<');
-		rightArg += 2;
-		printf("The right arg is: %s\n", rightArg);
-		printf("the command is: %s\n", command);
+		redirectIn(command);	
 	}
 
 	//redirect output
-	else if (strstr(command, ">")) {
-
-
+	else if (index(command, '>') != NULL) {
+		redirectOut(command);
 	}
 
 
