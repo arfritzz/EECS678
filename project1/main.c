@@ -11,6 +11,7 @@
 #include <sys/types.h> /* needed for pid_t */
 #include <string.h>    /* needed for mitch reasons */
 #include <fcntl.h>     /* needed for output redirection */
+#include <wait.h>
 
 struct Job {
 	int pid;
@@ -65,19 +66,27 @@ bool redirectOut (char* command) {
 	//right argument
 		char* rightArg = strrchr(command, '>');
 		rightArg += 2;
+		int length = strlen(rightArg);
+		rightArg[length] = '\0';
 		printf("The right arg is: %s\n", rightArg);
 
 	//create a child process to run the command
 	//the print it to the file 
-		int fd = open(rightArg, O_WRONLY|O_CREAT|O_TRUNC, 0666);
-		dup2(fd, 1);
-		close(fd);   
-		execve(rightArg, leftArg);
-		fprintf(stderr, "Yikes, file could not be written to.\n Try again.\n");
+	if (fork() == 0) {
+		int fd = open(rightArg, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+		// make stdout go to file
+		dup2(fd,1);
+		
+		//parse_Input(leftArg);
+		close(fd);
+		
+	}
+	else {
+		//printf("Yikes, file could not be written to.\nTry again.\n");
+		wait(NULL);
+		exit(0);
+	}	
 	
-	
-	//freopen(rightArg, "w", stdout);
-	//fclose(stdout);
 }
 
 bool redirectIn (char* command) {
