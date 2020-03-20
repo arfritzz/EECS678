@@ -321,12 +321,19 @@ void parse_Input(char* command){
 	}
 
 	else if(strncmp(command,"jobs",4) == 0){
+		printf("\n Current Jobs:\n");
+		printf("Job ID, PID, Command\n\n");
 
+		for(int i=0; i < job_count; i++){
+			if(kill(jobs[i].pid, 0) == 0){
+				printf(" (%d) %d || %s\n\n", jobs[i].id, jobs[i].pid, jobs[i].cmd);
+			}
+		}
 	}
 
 	//RUNNING EXECUTABLES
 	else if(strncmp(command,"./",2) == 0){
-		command+=2;
+		//command+=2;
 
 		while(hasSpaces(command[0])){
 			command++;
@@ -342,9 +349,12 @@ void parse_Input(char* command){
 			token_count++;
 		}
 
-		pid_t pid;
+		tokens[token_count+1] = '\0';
 
-		switch((pid = fork())){
+		pid_t pid = fork();
+		int child_status;
+
+		switch(pid){
 			case -1:
 				printf("Error in Fork\n\n");
 				exit(0);
@@ -355,6 +365,7 @@ void parse_Input(char* command){
 				exit(0);
 				break;
 			default:
+				while(wait(NULL) != pid){}
 				printf("parent doing stuff\n");
 				break;
 		}
@@ -363,7 +374,7 @@ void parse_Input(char* command){
 	}
 
 	else{
-		printf("ALSOPOOP\n");
+		printf("\nInvalid Command\n\n");
 	}
 }
 
