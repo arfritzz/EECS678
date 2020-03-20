@@ -9,7 +9,8 @@
 #include <unistd.h>    /* standard unix functions, like getpid()         */
 #include <signal.h>    /* signal name macros, and the signal() prototype */
 #include <sys/types.h> /* needed for pid_t */
-#include <string.h> 		/*needed for mitch reasons */
+#include <string.h>    /* needed for mitch reasons */
+#include <fcntl.h>     /* needed for output redirection */
 
 struct Job {
 	int pid;
@@ -52,20 +53,31 @@ void set_Path(char* newPath){
 
 bool redirectOut (char* command) {
 	//left argument
-	char leftArg[64];
-	int position = 0;
-	while (command[position] != '>') {
-		leftArg[position] = command[position];
-		position++;
-	}
-	leftArg[position-1] = '\0';
-	printf("The left arg is: %s\n", leftArg);
+		char leftArg[64];
+		int position = 0;
+		while (command[position] != '>') {
+			leftArg[position] = command[position];
+			position++;
+		}
+		leftArg[position-1] = '\0';
+		printf("The left arg is: %s\n", leftArg);
 
 	//right argument
-	char* rightArg = strrchr(command, '>');
-	rightArg += 2;
-	printf("The right arg is: %s\n", rightArg);
+		char* rightArg = strrchr(command, '>');
+		rightArg += 2;
+		printf("The right arg is: %s\n", rightArg);
 
+	//create a child process to run the command
+	//the print it to the file 
+		int fd = open(rightArg, O_WRONLY|O_CREAT|O_TRUNC, 0666);
+		dup2(fd, 1);
+		close(fd);   
+		execve(rightArg, leftArg);
+		fprintf(stderr, "Yikes, file could not be written to.\n Try again.\n");
+	
+	
+	//freopen(rightArg, "w", stdout);
+	//fclose(stdout);
 }
 
 bool redirectIn (char* command) {
@@ -79,16 +91,16 @@ bool redirectIn (char* command) {
         leftArg[position-1] = '\0'; 
         printf("The left arg is: %s\n", leftArg);
 
-        //right argument
+    //right argument
         char* filename = strrchr(command, '<');
         filename += 2;
         printf("The right arg is: %s\n", filename);
 
-        //send result of left arg to right arg destination
+     //send result of left arg to right arg destination
         int finalfile = dup(0);
-	freopen(filename, "r", stdin);
-	parse_Input(leftArg);
-	stdin = fdopen(finalfile, "r");
+		freopen(filename, "r", stdin);
+		parse_Input(leftArg);
+		stdin = fdopen(finalfile, "r");
 
 }
 
