@@ -14,7 +14,7 @@
 #include <wait.h>
 
 struct Job {
-	int pid;
+	pid_t pid;
 	int id;
 	char* cmd;
 };
@@ -364,13 +364,15 @@ void parse_Input(char* command){
 				printf("Failure in child Function\n\n");
 				exit(0);
 				break;
-			default:
+			default: ;
+				/*struct Job new_job = {.pid = pid, .id = job_count, .cmd = command};
+				jobs[job_count] = new_job;
+				job_count++;*/
 				while(wait(NULL) != pid){}
-				printf("parent doing stuff\n");
 				break;
 		}
 
-		printf("End of parent program\n\n");
+		printf("[%d] %d Finished %s\n\n", jobs[job_count].id, jobs[job_count].pid, jobs[job_count].cmd);
 	}
 
 	else{
@@ -401,6 +403,13 @@ int main(int argc, char **argv, char **envp) {
 				printf("Invalid input file, try again\n");
 				exit(1);
 			}
+
+			int count = 0;
+			while(count < 1024 && fgets(command, 100, inputFile)){
+				parse_Input(command);
+			}
+
+			fclose(inputFile);
 		}
 	}
 
