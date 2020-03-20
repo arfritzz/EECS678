@@ -11,6 +11,14 @@
 #include <sys/types.h> /* needed for pid_t */
 #include <string.h> 		/*needed for mitch reasons */
 
+struct Job {
+	int pid;
+	int id;
+	char* command;
+};
+
+static struct Job jobs[64];
+
 int got_response = 0;
 char* relPath;
 int path_Size = 0;
@@ -111,8 +119,24 @@ void parse_Input(char* command){
 
 	// check Commands
 
+		//INPUT OUTPUT REDIRECTION
+        //redirect input
+	if (index(command, '<') != NULL) {
+		redirectIn(command);	
+	}
+
+	//redirect output
+	else if (index(command, '>') != NULL) {
+		redirectOut(command);
+	}
+
+	//PIPING
+	else if (strstr(command, "|")) {
+
+	}
+
 	// FIRST COMMAND - SET
-	if(strncmp(command,"set",3) == 0){
+	else if(strncmp(command,"set",3) == 0){
 	//do ++ on command
 	//printf("%s\n", command);
 	command += 4;
@@ -128,15 +152,10 @@ void parse_Input(char* command){
 			//remove actual pathway from command, characters
 			//between spaces
 			printf("%s\n", command);
-			if(strncmp(command,"/",1) == 0){
-
-				char* tempCommand = strcpy(tempCommand, command);
-				char* newPath = strtok(tempCommand," ");
-				command += strlen(newPath);
-				command++;
-				printf("command: %s\n", command);
-				printf("new Path: %s\n", newPath);
-				command = '\0';
+			if(strncmp(command,"=",1) == 0){
+				//printf("command: %s\n", command);
+				char* newPath = strstr(command, "/");
+				//printf("new Path: %s\n", newPath);
 				strcat(relPath,":");
 				strcat(relPath,newPath);
 
@@ -170,18 +189,19 @@ void parse_Input(char* command){
 			}
 
 			//GET NEW HOME PATH
-			if(strncmp(command,"/",1) == 0){
+			if(strncmp(command,"=",1) == 0){
 
-				char* tempCommand = strcpy(tempCommand, command);
-				char* newPath = strtok(tempCommand," ");
-				command += strlen(newPath);
-				command++;
+				char* newPath = strstr(command,"/");
 				printf("command: %s\n", command);
 				printf("new Path: %s\n", newPath);
 
-				setenv("HOME",newPath,0);
-				homePath = getenv("HOME");
-				printf("%s\n", homePath);
+				if(setenv("HOME",newPath,1) < 0){
+					printf("path set error\n");
+				}
+				else {
+					homePath = getenv("HOME");
+					printf("New HOME variable: %s\n", homePath);
+				}
 			}
 
 			else {
@@ -211,8 +231,12 @@ void parse_Input(char* command){
 		
 		if (command[1] == '\0') {
 			
-			chdir(getenv("HOME"));
-			printf("You are now at: %s\n", getenv("HOME"));
+			if(chdir(getenv("HOME")) != 0){
+				printf("Failed to change to HOME, change HOME path\n");
+			}
+			else {
+				printf("You are now at: %s\n", getenv("HOME"));
+			}
 		}
 
 		//otherwise set the real path
@@ -229,6 +253,7 @@ void parse_Input(char* command){
 			strcat(prevDirectory, command);	
 
 			int ret = chdir(prevDirectory);
+			printf("%s\n", prevDirectory);
                 
 			// if the directory doesnt exist then error
 			if (ret == -1) {
@@ -252,24 +277,6 @@ void parse_Input(char* command){
 	else if(strncmp(command,"jobs",4) == 0){
 
 	}
-	
-	//INPUT OUTPUT REDIRECTION
-        //redirect input
-	else if (index(command, '<') != NULL) {
-		redirectIn(command);	
-	}
-
-	//redirect output
-	else if (index(command, '>') != NULL) {
-		redirectOut(command);
-	}
-
-
-	//PIPING
-	else if (strstr(command, "|")) {
-
-	}
-
 
 	//RUNNING EXECUTABLES
 	else if(strncmp(command,"./",2) == 0){
@@ -305,13 +312,14 @@ int main(int argc, char **argv, char **envp) {
 
 
 	else {
-	        homePath = getenv("HOME");
+	    homePath = getenv("HOME");
 		//initalHome = homePath;
-		relPath = getenv("PATH");	
+		relPath = getenv("PATH");
 		while(1){
 			int inputStart = 0;
 
-			printf("#> ");
+			cwd = getcwd(NULL,1024);	
+			printf("QUASH: %s : ", cwd);
 			fflush(stdout);
 			fgets(input, sizeof(input), stdin);
 
