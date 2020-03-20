@@ -37,6 +37,8 @@ bool hasSpaces(char c){
 	return(c == ' ' || c == '\n' || c == '\t');
 }
 
+
+// not sure if this function is used? maybe delete?
 void set_Path(char* newPath){
 	char* temp = strtok(newPath, "=");
 	char* type = temp;
@@ -167,6 +169,9 @@ void parse_Input(char* command){
 				char* newPath = strstr(command, "/");
 				//printf("new Path: %s\n", newPath);
 				strcat(relPath,":");
+
+				// why do you string concat here?
+				// just thinking about if the new path is different then the old path...
 				strcat(relPath,newPath);
 
 				if((setenv("PATH",relPath,0))< 0){
