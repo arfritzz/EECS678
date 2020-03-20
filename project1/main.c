@@ -52,6 +52,30 @@ void set_Path(char* newPath){
 	}
 }
 
+void executeRedirection(char* action, char* args, char* filename) {
+	pid_t pid = fork();
+	
+	//FILE* outputFile;
+
+	//if(filename != NULL) {
+	//	outputFile = freopen(filename, "w", stdout);
+	//}
+
+	if (pid == 0) {
+		int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+
+		parse_Input(action);
+
+		close(fd);
+
+	}
+	else {
+		wait(NULL);
+		exit(0);
+		// parent doesnt need to do anything
+	}
+}
+
 bool redirectOut (char* command) {
 	//left argument
 		char leftArg[64];
@@ -70,22 +94,8 @@ bool redirectOut (char* command) {
 		rightArg[length] = '\0';
 		printf("The right arg is: %s\n", rightArg);
 
-	//create a child process to run the command
-	//the print it to the file 
-	if (fork() == 0) {
-		int fd = open(rightArg, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-		// make stdout go to file
-		dup2(fd,1);
-		
-		//parse_Input(leftArg);
-		close(fd);
-		
-	}
-	else {
-		//printf("Yikes, file could not be written to.\nTry again.\n");
-		wait(NULL);
-		exit(0);
-	}	
+	// pass to function
+		executeRedirection(leftArg, NULL, rightArg);	
 	
 }
 
