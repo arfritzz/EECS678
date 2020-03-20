@@ -14,10 +14,11 @@
 struct Job {
 	int pid;
 	int id;
-	char* command;
+	char* cmd;
 };
 
 static struct Job jobs[64];
+int job_count = 0;
 
 int got_response = 0;
 char* relPath;
@@ -118,10 +119,19 @@ void parse_Input(char* command){
 	}
 
 	// check Commands
+	if(strncmp(command,"help",4) == 0){
+		printf("\n\n COMMAND HELP\n\n");
+		printf("set (PATH | HOME) (args) \n");
+		printf("cd (args)\n");
+		printf("./(exec) (args)\n");
+		printf("< = redirect input\n");
+		printf("> = redirect output\n");
+		printf("| used for piping\n\n\n");
+	}
 
 		//INPUT OUTPUT REDIRECTION
         //redirect input
-	if (index(command, '<') != NULL) {
+	else if (index(command, '<') != NULL) {
 		redirectIn(command);	
 	}
 
@@ -280,7 +290,40 @@ void parse_Input(char* command){
 
 	//RUNNING EXECUTABLES
 	else if(strncmp(command,"./",2) == 0){
+		command+=2;
 
+		while(hasSpaces(command[0])){
+			command++;
+		}
+
+		printf("%s\n",command);
+		char** tokens;
+		int token_count = 0;
+		tokens[token_count] = strtok(command, " ");
+		while(tokens[token_count]){
+			printf("token: %s\n", tokens[token_count]);
+			tokens[token_count+1] = strtok(NULL, " ");
+			token_count++;
+		}
+
+		pid_t pid;
+
+		switch((pid = fork())){
+			case -1:
+				printf("Error in Fork\n\n");
+				exit(0);
+				break;
+			case 0:
+				execvp(tokens[0], tokens);
+				printf("Failure in child Function\n\n");
+				exit(0);
+				break;
+			default:
+				printf("parent doing stuff\n");
+				break;
+		}
+
+		printf("End of parent program\n\n");
 	}
 
 	else{
@@ -297,6 +340,10 @@ int main(int argc, char **argv, char **envp) {
 	// for(int i=0; i<sizeof(envp); i++){
 	// 	printf("%s\n", envp[i]);
 	// }
+
+	printf("\n\n\n		Welcome to Quash		\n");
+	printf("	'help' for command options\n\n\n\n");
+
 
 	if(argv[1] != NULL){
 		if(strcmp(argv[1], "<")){
