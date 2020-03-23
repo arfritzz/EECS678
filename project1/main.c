@@ -3,6 +3,8 @@
 // EECS 678
 // Main.c
 
+// seeing if this works
+
 #include <stdio.h>     /* standard I/O functions                         */
 #include <stdlib.h>    /* exit                                           */
 #include <stdbool.h>   /* using bool data type			                     */
