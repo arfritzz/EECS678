@@ -3,8 +3,6 @@
 // EECS 678
 // Main.c
 
-// seeing if this works
-
 #include <stdio.h>     /* standard I/O functions                         */
 #include <stdlib.h>    /* exit                                           */
 #include <stdbool.h>   /* using bool data type			                     */
@@ -54,26 +52,43 @@ void set_Path(char* newPath){
 	}
 }
 
-void executeRedirection(char* action, char* args, char* filename) {
-	pid_t pid = fork();
+void executeRedirection(bool direction, char* action, char* args, char* filename) {
+	// if the direction is true, then redirect
+	// standard output to the file "filename"
 
-	if (pid == 0) {
-		int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-		//dup2(fd, 1);
-		parse_Input(action);
+	if (direction == true) {
 
-		close(fd);
-		//execlp(filename, args);
+		pid_t pid = fork();
 
+		if (pid == 0) {
+			FILE* fd = freopen(filename, "w", stdout);
+			parse_Input(action);
+			// need a way to exit out of the child?
+			exit(1);
+		}
+		
+		else {
+			wait(NULL);
+			//exit(1);
+			// parent doesnt need to do anything
+		}
 	}
+
+	// direction is false so redirect in
 	else {
-		wait(NULL);
-		exit(0);
-		// parent doesnt need to do anything
+		//send result of left arg to right arg destination
+        int finalfile = dup(0);
+		freopen(filename, "r", stdin);
+		parse_Input(action);
+		stdin = fdopen(finalfile, "r");
+
 	}
 }
 
-bool redirectOut (char* command) {
+// this function splits up the command 
+// into the left argument and right 
+// argument of redirection
+bool redirect (bool direction, char* command) {
 	//left argument
 		char leftArg[64];
 		int position = 0;
@@ -92,33 +107,10 @@ bool redirectOut (char* command) {
 		printf("The right arg is: %s\n", rightArg);
 
 	// pass to function
-		executeRedirection(leftArg, NULL, rightArg);	
+	executeRedirection(direction, leftArg, NULL, rightArg);	
 	
 }
 
-bool redirectIn (char* command) {
-	//left argument
-        char leftArg[64];
-        int position = 0;
-        while (command[position] != '<') {
-                leftArg[position] = command[position];
-                position++;
-        }       
-        leftArg[position-1] = '\0'; 
-        printf("The left arg is: %s\n", leftArg);
-
-    //right argument
-        char* filename = strrchr(command, '<');
-        filename += 2;
-        printf("The right arg is: %s\n", filename);
-
-     //send result of left arg to right arg destination
-        int finalfile = dup(0);
-		freopen(filename, "r", stdin);
-		parse_Input(leftArg);
-		stdin = fdopen(finalfile, "r");
-
-}
 
 bool pipeing (char* command) {
 	//left argument
@@ -162,12 +154,12 @@ void parse_Input(char* command){
 		//INPUT OUTPUT REDIRECTION
         //redirect input
 	else if (index(command, '<') != NULL) {
-		redirectIn(command);	
+		redirect(false, command);	
 	}
 
 	//redirect output
 	else if (index(command, '>') != NULL) {
-		redirectOut(command);
+		redirect(true, command);
 	}
 
 	//PIPING
@@ -272,8 +264,8 @@ void parse_Input(char* command){
 		//to home directory
 		
 		
-		if (command[1] == '\0') {
-			
+		if (command[1] == '\0' || command[1] == '<' || command[1] == '>') {
+			printf("command at 1 : %d \n", command[1]);
 			if(chdir(getenv("HOME")) != 0){
 				printf("Failed to change to HOME, change HOME path\n");
 			}
