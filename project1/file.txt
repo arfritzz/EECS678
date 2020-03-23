@@ -1,0 +1,2 @@
+QUASH: /home/a987f052/EECS678/project1 : ALSOPOOP
+QUASH: /home/a987f052/EECS678/project1 : 
