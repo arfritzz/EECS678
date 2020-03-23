@@ -54,19 +54,14 @@ void set_Path(char* newPath){
 
 void executeRedirection(char* action, char* args, char* filename) {
 	pid_t pid = fork();
-	
-	//FILE* outputFile;
-
-	//if(filename != NULL) {
-	//	outputFile = freopen(filename, "w", stdout);
-	//}
 
 	if (pid == 0) {
 		int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
-
+		//dup2(fd, 1);
 		parse_Input(action);
 
 		close(fd);
+		//execlp(filename, args);
 
 	}
 	else {
