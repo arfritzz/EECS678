@@ -52,11 +52,11 @@ void set_Path(char* newPath){
 	}
 }
 
-void executeRedirection(bool direction, char* action, char* args, char* filename) {
-	// if the direction is true, then redirect
+void executeRedirection(char direction, char* action, char* filename) {
+	// redirect
 	// standard output to the file "filename"
 
-	if (direction == true) {
+	if (direction == '>') {
 
 		pid_t pid = fork();
 
@@ -88,11 +88,11 @@ void executeRedirection(bool direction, char* action, char* args, char* filename
 // this function splits up the command 
 // into the left argument and right 
 // argument of redirection
-bool redirect (bool direction, char* command) {
+bool redirect (char direction, char* command) {
 	//left argument
 		char leftArg[1024];
 		int position = 0;
-		while (command[position] != ' ') {
+		while (command[position] != direction) {
 			leftArg[position] = command[position];
 			position++;
 		}
@@ -100,7 +100,7 @@ bool redirect (bool direction, char* command) {
 		printf("The left arg is: %s\n", leftArg);
 	
 	//right argument
-		char* rightArg = strrchr(command, '>');
+		char* rightArg = strrchr(command, direction);
 		rightArg++;
 		position = 0;
 		while (rightArg[position] == 32) {
@@ -113,30 +113,8 @@ bool redirect (bool direction, char* command) {
 		rightArg[position] = '\0';
 		printf("The right arg is: %s\n", rightArg);
 
-	//arguments to the left argument
-		char* fnargstemp = index(command, 32);
-		char fnargs[1024];
-		while(fnargstemp[0] == 32) {
-			fnargstemp++;
-		}
-		printf("The args at 1 : %d\n", fnargstemp[0]);
-		if(fnargstemp[0] == '<' || fnargstemp[0] == '>') {
-			// pass to function
-			printf("HERE\n");
-			executeRedirection(direction, leftArg, NULL, rightArg);
-		}
-		else{
-			position = 0;
-			while(fnargstemp[position] != '<' && fnargstemp[position] != '>' && fnargstemp[position] != ' ') {
-				fnargs[position] = fnargstemp[position];
-				position++;
-			}
-			fnargs[position] = '\0';
-			printf("The args are: %s\n", fnargs);
-
-			// pass to function
-			executeRedirection(direction, leftArg, fnargs, rightArg);	
-		}	
+		// pass to function
+		executeRedirection(direction, leftArg, rightArg);		
 }
 
 
@@ -182,12 +160,12 @@ void parse_Input(char* command){
 		//INPUT OUTPUT REDIRECTION
         //redirect input
 	else if (index(command, '<') != NULL) {
-		redirect(false, command);	
+		redirect(60, command);	
 	}
 
 	//redirect output
 	else if (index(command, '>') != NULL) {
-		redirect(true, command);
+		redirect(62, command);
 	}
 
 	//PIPING
