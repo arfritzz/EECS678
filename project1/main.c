@@ -90,25 +90,53 @@ void executeRedirection(bool direction, char* action, char* args, char* filename
 // argument of redirection
 bool redirect (bool direction, char* command) {
 	//left argument
-		char leftArg[64];
+		char leftArg[1024];
 		int position = 0;
-		while (command[position] != '>') {
+		while (command[position] != ' ') {
 			leftArg[position] = command[position];
 			position++;
 		}
-		leftArg[position-1] = '\0';
+		leftArg[position] = '\0';
 		printf("The left arg is: %s\n", leftArg);
-
+	
 	//right argument
 		char* rightArg = strrchr(command, '>');
-		rightArg += 2;
-		int length = strlen(rightArg);
-		rightArg[length] = '\0';
+		rightArg++;
+		position = 0;
+		while (rightArg[position] == 32) {
+			rightArg++;
+		}
+
+		while(rightArg[position] != ' ') {
+			position++;
+		}
+		rightArg[position] = '\0';
 		printf("The right arg is: %s\n", rightArg);
 
-	// pass to function
-	executeRedirection(direction, leftArg, NULL, rightArg);	
-	
+	//arguments to the left argument
+		char* fnargstemp = index(command, 32);
+		char fnargs[1024];
+		while(fnargstemp[0] == 32) {
+			fnargstemp++;
+		}
+		printf("The args at 1 : %d\n", fnargstemp[0]);
+		if(fnargstemp[0] == '<' || fnargstemp[0] == '>') {
+			// pass to function
+			printf("HERE\n");
+			executeRedirection(direction, leftArg, NULL, rightArg);
+		}
+		else{
+			position = 0;
+			while(fnargstemp[position] != '<' && fnargstemp[position] != '>' && fnargstemp[position] != ' ') {
+				fnargs[position] = fnargstemp[position];
+				position++;
+			}
+			fnargs[position] = '\0';
+			printf("The args are: %s\n", fnargs);
+
+			// pass to function
+			executeRedirection(direction, leftArg, fnargs, rightArg);	
+		}	
 }
 
 
@@ -263,10 +291,12 @@ void parse_Input(char* command){
 		//if no command given, return
 		//to home directory
 		
+		printf("command at 1 : %d \n", command[1]);
 		
 		if (command[1] == '\0' || command[1] == '<' || command[1] == '>') {
 			printf("command at 1 : %d \n", command[1]);
 			if(chdir(getenv("HOME")) != 0){
+				printf("the home directory is: %s\n", getenv("HOME"));
 				printf("Failed to change to HOME, change HOME path\n");
 			}
 			else {
