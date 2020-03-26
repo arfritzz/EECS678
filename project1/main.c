@@ -59,16 +59,19 @@ void executeRedirection(char direction, char* action, char* filename) {
 	if (direction == '>') {
 
 		pid_t pid = fork();
+		int success; 
 
 		if (pid == 0) {
+			//child needs to inherit environment variables
 			FILE* fd = freopen(filename, "w", stdout);
 			parse_Input(action);
+			execlp(action, filename, NULL);
 			// need a way to exit out of the child?
 			exit(1);
 		}
 		
 		else {
-			wait(NULL);
+			waitpid(pid, &success, 0);
 			//exit(1);
 			// parent doesnt need to do anything
 		}
@@ -413,7 +416,6 @@ int main(int argc, char **argv, char **envp) {
 
 	else {
 	    homePath = getenv("HOME");
-		//initalHome = homePath;
 		relPath = getenv("PATH");
 		while(1){
 			int inputStart = 0;
