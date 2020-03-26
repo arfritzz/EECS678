@@ -272,10 +272,8 @@ void parse_Input(char* command){
 		//if no command given, return
 		//to home directory
 		
-		printf("command at 1 : %d \n", command[1]);
 		
 		if (command[1] == '\0' || command[1] == '<' || command[1] == '>') {
-			printf("command at 1 : %d \n", command[1]);
 			if(chdir(getenv("HOME")) != 0){
 				printf("the home directory is: %s\n", getenv("HOME"));
 				printf("Failed to change to HOME, change HOME path\n");
@@ -329,6 +327,11 @@ void parse_Input(char* command){
 				printf(" (%d) %d || %s\n\n", jobs[i].id, jobs[i].pid, jobs[i].cmd);
 			}
 		}
+	}
+	
+	else if(strncmp(command, "pwd", 3) == 0) {
+		char* prevDirectory = getcwd(NULL,1024);
+		printf("%s\n", prevDirectory);
 	}
 
 	//RUNNING EXECUTABLES
