@@ -33,7 +33,7 @@ char* cwd;
 
 char* command;
 void parse_Input(char* command);
-//char* command_SET = "set";
+bool pipecommand (char* leftarg, char* rightarg);
 
 bool hasSpaces(char c){
 	return(c == ' ' || c == '\n' || c == '\t');
@@ -52,7 +52,11 @@ void set_Path(char* newPath){
 	}
 }
 
+/***************
+	< and > 
+***************/ 
 void executeRedirection(char direction, char* action, char* filename) {
+	
 	// redirect
 	// standard output to the file "filename"
 
@@ -65,7 +69,11 @@ void executeRedirection(char direction, char* action, char* filename) {
 			//child needs to inherit environment variables
 			FILE* fd = freopen(filename, "w", stdout);
 			parse_Input(action);
-			execlp(action, filename, NULL);
+
+			if (fd != NULL) {
+				int val = fileno(fd);
+			}
+			//execlp(action, filename, NULL);
 			// need a way to exit out of the child?
 			exit(1);
 		}
@@ -88,9 +96,10 @@ void executeRedirection(char direction, char* action, char* filename) {
 	}
 }
 
-// this function splits up the command 
-// into the left argument and right 
-// argument of redirection
+/******************
+PARSING ARGS FOR
+REDIRECTION
+*******************/
 bool redirect (char direction, char* command) {
 	//left argument
 		char leftArg[1024];
@@ -116,33 +125,68 @@ bool redirect (char direction, char* command) {
 		rightArg[position] = '\0';
 		printf("The right arg is: %s\n", rightArg);
 
-		// pass to function
-		executeRedirection(direction, leftArg, rightArg);		
+	// if direction is pipe
+		if (direction == '|') {
+			pipecommand(leftArg, rightArg);
+		}
+		else {
+			// pass to function
+			executeRedirection(direction, leftArg, rightArg);		
+		}
 }
 
+/*************
+	PIPING
+*************/
+bool pipecommand (char* leftarg, char* rightarg) {
+	
+	// sends output of left arg as input to right arg
 
-bool pipeing (char* command) {
-	//left argument
-        char leftArg[64];
-        int position = 0;
-        while (command[position] != '|') {
-                leftArg[position] = command[position];
-                position++;
-        }       
-        leftArg[position-1] = '\0'; 
-        printf("The left arg is: %s\n", leftArg);
-
-        //right argument
-        char* rightArg = strrchr(command, '|');
-        rightArg += 2;
-        printf("The right arg is: %s\n", rightArg);
-
+	char** dupleftarg;
+	char** duprightarg;
+	dupleftarg[0] = leftarg;
+	duprightarg[0] = rightarg; 
 	int fdpipe[2];
 	pipe(fdpipe);
 
+	int pid_t = fork();
+
+	int status;
+
+	if (pid_t == 0) {
+		
+		close(fdpipe[0]);
+		
+		// 1 is standard out
+		// old file descriptor is fdpipe[1] (write end)
+		// new file descriptor is standard out
+		dup2(fdpipe[1], 1);
+		close(fdpipe[1]);
+
+		execvp(*dupleftarg, dupleftarg);
+
+		exit(0);
+	}
+	else {
+		close(fdpipe[1]);
+		// 0 is standard in 
+		// old file descriptor is fdpipe[0] (read end)
+		// new file descriptor is standard in
+		dup2(fdpipe[0], 0);
+		close(fdpipe[0]);
+
+		// must wait on child to finish
+		waitpid(pid_t,&status, 0);
+
+		execvp(*duprightarg, duprightarg);
+
+	}
+
 }
 
-
+/******************************
+		PARSING INPUT
+*******************************/
 
 void parse_Input(char* command){
 	while(hasSpaces(command[0])){
@@ -310,14 +354,17 @@ void parse_Input(char* command){
 		}
 	}
 
+	// QUIT
 	else if(strncmp(command,"quit",4) == 0){
 		exit(0);
 	}
 
+	//EXIT
 	else if(strncmp(command,"exit",4) == 0){
 		exit(0);
 	}
 
+	// JOBS
 	else if(strncmp(command,"jobs",4) == 0){
 		printf("\n Current Jobs:\n");
 		printf("Job ID, PID, Command\n\n");
@@ -329,6 +376,7 @@ void parse_Input(char* command){
 		}
 	}
 	
+	// PRINT WORKING DIRECTORY
 	else if(strncmp(command, "pwd", 3) == 0) {
 		char* prevDirectory = getcwd(NULL,1024);
 		printf("%s\n", prevDirectory);
@@ -384,6 +432,9 @@ void parse_Input(char* command){
 }
 
 
+/************************
+MAIN FUNCTION
+*************************/
 int main(int argc, char **argv, char **envp) {
 	char input[64];
 	char* inputBuffer[32];
