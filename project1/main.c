@@ -9,6 +9,8 @@
 #include <unistd.h>    /* standard unix functions, like getpid()         */
 #include <signal.h>    /* signal name macros, and the signal() prototype */
 #include <sys/types.h> /* needed for pid_t */
+#include <sys/utsname.h> /* needed for system information */
+#include <dirent.h>		/* for ls */
 #include <string.h>    /* needed for mitch reasons */
 #include <fcntl.h>     /* needed for output redirection */
 #include <wait.h>
@@ -30,6 +32,7 @@ char* homePath;
 //used to keep track of 
 //current path for cd
 char* cwd;
+struct utsname unameData;
 
 char* command;
 void parse_Input(char* command);
@@ -220,6 +223,64 @@ void parse_Input(char* command){
 
 	}
 
+	else if(strncmp(command,"pwd",3) == 0){
+		command+=3;
+		printf("The current working directory is: \n\n");
+		printf("%s\n\n", cwd);
+	}
+
+	else if(strncmp(command, "ls", 2) == 0){
+		DIR *p;
+		struct dirent *d;
+
+		p = opendir(cwd);
+		if(p==NULL){
+			printf("Directory Error");
+		}
+		else{
+			int count = 0;
+			while(d=readdir(p)){
+				printf("%s\t",d->d_name);
+				if(count == 4){
+					printf("\n");
+					count=0;
+				}
+				else {
+					count++;
+				}
+			}
+			printf("\n\n");
+		}
+	}
+
+	else if(strncmp(command,"uname",5) == 0){
+		if(uname(&unameData) == 0){
+			printf("%s\n", unameData.sysname);
+			printf("%s\n", unameData.nodename);
+			printf("%s\n", unameData.release);
+			printf("%s\n", unameData.version);
+			printf("%s\n", unameData.machine);
+		}
+		else {
+			printf("Error retrieving system information\n\n");
+		}
+	}
+
+	else if(strncmp(command,"printenv",8) == 0){
+		command+=8;
+		while(hasSpaces(command[0])){
+			command++;
+		}
+
+		if(strncmp(command,"HOME",4) == 0){
+			printf("HOME: %s\n", homePath);
+		}
+
+		else if(strncmp(command,"PATH",4) == 0){
+			printf("PATH: %s\n", relPath);
+		}
+	}
+
 	// FIRST COMMAND - SET
 	else if(strncmp(command,"set",3) == 0){
 	//do ++ on command
@@ -236,7 +297,7 @@ void parse_Input(char* command){
 			}
 			//remove actual pathway from command, characters
 			//between spaces
-			printf("%s\n", command);
+			printf("command:\n %s\n", command);
 			if(strncmp(command,"=",1) == 0){
 				//printf("command: %s\n", command);
 				char* newPath = strstr(command, "/");
@@ -280,8 +341,8 @@ void parse_Input(char* command){
 			if(strncmp(command,"=",1) == 0){
 
 				char* newPath = strstr(command,"/");
-				printf("command: %s\n", command);
-				printf("new Path: %s\n", newPath);
+				//printf("command: %s\n", command);
+				//printf("new Path: %s\n", newPath);
 
 				if(setenv("HOME",newPath,1) < 0){
 					printf("path set error\n");
@@ -356,11 +417,13 @@ void parse_Input(char* command){
 
 	// QUIT
 	else if(strncmp(command,"quit",4) == 0){
+		printf("Exiting Quash... \n");
 		exit(0);
 	}
 
 	//EXIT
 	else if(strncmp(command,"exit",4) == 0){
+		printf("Exiting Quash... \n");
 		exit(0);
 	}
 
@@ -447,9 +510,15 @@ int main(int argc, char **argv, char **envp) {
 	printf("\n\n\n		Welcome to Quash		\n");
 	printf("	'help' for command options\n\n\n\n");
 
+		for(int i=0; i<argc-1; i++){
+			printf("%s\n", argv[i]);
+		}
 
 	if(argv[1] != NULL){
-		if(strcmp(argv[1], "<")){
+		
+
+
+		if(strncmp(argv[1], "<",1) == 0){
 			printf("Running commands from: %s\n", argv[2]);
 			FILE* inputFile = fopen(argv[2], "r");
 
@@ -459,8 +528,11 @@ int main(int argc, char **argv, char **envp) {
 			}
 
 			int count = 0;
-			while(count < 1024 && fgets(command, 100, inputFile)){
+			while(count < 1024 && fgets(command, 1024, inputFile)){
+				printf("FULL COMMAND: %s\n\n", command);
 				parse_Input(command);
+				command = NULL;
+				count++;
 			}
 
 			fclose(inputFile);
@@ -474,7 +546,7 @@ int main(int argc, char **argv, char **envp) {
 		while(1){
 			int inputStart = 0;
 
-			cwd = getcwd(NULL,1024);	
+			cwd = getcwd(NULL,1024);
 			printf("QUASH: %s : ", cwd);
 			fflush(stdout);
 			fgets(input, sizeof(input), stdin);
