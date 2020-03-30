@@ -257,8 +257,8 @@ void parse_Input(char* command){
 				//printf("new Path: %s\n", newPath);
 				strcat(relPath,":");
 
-				// why do you string concat here?
-				// just thinking about if the new path is different then the old path...
+				// if the new path is different 
+				//then the old path
 				strcat(relPath,newPath);
 
 				if((setenv("PATH",relPath,0))< 0){
@@ -352,8 +352,13 @@ void parse_Input(char* command){
 			char* prevDirectory = getcwd(NULL,1024);
 			
 			//add a / where the space was
-			//mark the end of the string	
-			command[0] = '/';
+			//mark the end of the string
+			if (command[1] == '/') {
+				command++;
+			}
+			else {
+				command[0] = '/';
+			}	
 			command[strlen(command)] = '\0';
 			
 			strcat(prevDirectory, command);	
