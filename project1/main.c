@@ -38,6 +38,10 @@ char* command;
 void parse_Input(char* command);
 bool pipecommand (char* leftarg, char* rightarg);
 
+/************************
+Ensures the beginning of the input 
+command is space deliminated 
+************************/ 
 bool hasSpaces(char c){
 	return(c == ' ' || c == '\n' || c == '\t');
 }
@@ -220,7 +224,7 @@ void parse_Input(char* command){
 
 	//PIPING
 	else if (strstr(command, "|")) {
-
+		redirect('|', command);
 	}
 
 	else if(strncmp(command,"pwd",3) == 0){
@@ -229,7 +233,7 @@ void parse_Input(char* command){
 		printf("%s\n\n", cwd);
 	}
 
-	else if(strncmp(command, "ls", 2) == 0){
+	/* else if(strncmp(command, "ls", 2) == 0){
 		DIR *p;
 		struct dirent *d;
 
@@ -280,6 +284,7 @@ void parse_Input(char* command){
 			printf("PATH: %s\n", relPath);
 		}
 	}
+	*/
 
 	// FIRST COMMAND - SET
 	else if(strncmp(command,"set",3) == 0){
@@ -490,7 +495,37 @@ void parse_Input(char* command){
 	}
 
 	else{
-		printf("\nInvalid Command\n\n");
+		pid_t pid;
+		pid = fork();
+		int status;
+
+		if (pid == 0) {
+			// check to see if there is an execuatable 
+			while ((command[0]) == ' ') {
+				command++;
+			}
+
+			printf("command: %s\n", command);
+
+			char* inputPath = "/bin/";
+			//char* finalChar = '\0'; 
+			strcat(inputPath,command);
+			//strcat(inputPath, finalChar);
+
+			printf("HERE");
+
+			int success = execlp("/bin/", command, NULL);
+
+			if (success = -1) {
+				printf("\nInvalid Command\n\n");
+				exit(0);
+			}
+		}
+		else {
+			wait(&status);
+		}
+
+		
 	}
 }
 
