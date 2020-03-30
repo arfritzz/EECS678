@@ -262,35 +262,50 @@ void parse_Input(char* command){
 		SET
 	-----------*/ 
 	else if(strncmp(command,"set",3) == 0){
+	
 	//do ++ on command
+<<<<<<< HEAD
 	//printf("%s\n", command);
 	command += 3;
 	while(hasSpaces(command[0])){
 		command++;
 	}
+=======
+	command += 4;
+>>>>>>> 25005b9187ea2cabb9d0d368b0e6b5c51b98a702
 
-		// change PATH location
+		/*----------
+			PATH
+		-----------*/ 
 		if(strncmp(command,"PATH",4) == 0){
 			// used to get locations of all paths
 			//remove PATH from command, remove following spaces
 			command += 4;
+
 			while(hasSpaces(command[0])){
 				command++;
 			}
+
 			//remove actual pathway from command, characters
 			//between spaces
+<<<<<<< HEAD
 			//printf("command:\n %s\n", command);
+=======
+			printf("command:\n %s\n", command);
+
+>>>>>>> 25005b9187ea2cabb9d0d368b0e6b5c51b98a702
 			if(strncmp(command,"=",1) == 0){
-				//printf("command: %s\n", command);
+			
 				char* newPath = strstr(command, "/");
-				//printf("new Path: %s\n", newPath);
-				strcat(relPath,":");
+			
+				//strcat(relPath,":");
 
 				// if the new path is different 
 				//then the old path
-				strcat(relPath,newPath);
+				//strcat(relPath,newPath);
 
-				if((setenv("PATH",relPath,0))< 0){
+				//if((setenv("PATH",relPath,0))< 0){
+				if((setenv("PATH",newPath,0))< 0){
 					printf("path set error\n");
 				}
 				else {
@@ -483,6 +498,12 @@ void parse_Input(char* command){
 		printf("[%d] %d Finished %s\n\n", jobs[job_count].id, jobs[job_count].pid, jobs[job_count].cmd);
 	}*/
 
+
+
+	/*----------
+		RUNNING
+		EXECUTABLES
+	-----------*/ 
 	else{
 
 		/*
@@ -507,6 +528,7 @@ void parse_Input(char* command){
 
 				command[strlen(command)] = '\0';
 
+<<<<<<< HEAD
 				// check to see if there is an execuatable 
 				//args = index(command, ' ');
 				if (index(command, ' ') == NULL) {
@@ -515,6 +537,15 @@ void parse_Input(char* command){
 				else {
 					args = index(command, ' ');
 					args++;
+=======
+
+
+			/*----------
+				WITHOUT
+				ARGS
+			-----------*/ 
+			if (args == NULL) {
+>>>>>>> 25005b9187ea2cabb9d0d368b0e6b5c51b98a702
 
 					// if there is an accedential space
 					if (args[0] == '\0') {
@@ -528,7 +559,20 @@ void parse_Input(char* command){
 
 				if (args == NULL) {
 
+<<<<<<< HEAD
 					int success = execlp(command, command, NULL);
+=======
+
+			/*----------
+				WITH 
+				ARGS
+			-----------*/ 
+			else {
+				char* action;
+				int i = 0;
+				
+				action = strtok(command, " ");
+>>>>>>> 25005b9187ea2cabb9d0d368b0e6b5c51b98a702
 
 					if (success == -1) {
 						printf("\nInvalid Command\n\n");
