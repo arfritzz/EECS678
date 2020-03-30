@@ -227,37 +227,7 @@ void parse_Input(char* command){
 		redirect('|', command);
 	}
 
-	else if(strncmp(command,"pwd",3) == 0){
-		command+=3;
-		printf("The current working directory is: \n\n");
-		printf("%s\n\n", cwd);
-	}
-
-	/* else if(strncmp(command, "ls", 2) == 0){
-		DIR *p;
-		struct dirent *d;
-
-		p = opendir(cwd);
-		if(p==NULL){
-			printf("Directory Error");
-		}
-		else{
-			int count = 0;
-			while(d=readdir(p)){
-				printf("%s\t",d->d_name);
-				if(count == 4){
-					printf("\n");
-					count=0;
-				}
-				else {
-					count++;
-				}
-			}
-			printf("\n\n");
-		}
-	}
-
-	else if(strncmp(command,"uname",5) == 0){
+	/*else if(strncmp(command,"uname",5) == 0){
 		if(uname(&unameData) == 0){
 			printf("%s\n", unameData.sysname);
 			printf("%s\n", unameData.nodename);
@@ -286,7 +256,9 @@ void parse_Input(char* command){
 	}
 	*/
 
-	// FIRST COMMAND - SET
+	/*----------
+		SET
+	-----------*/ 
 	else if(strncmp(command,"set",3) == 0){
 	//do ++ on command
 	//printf("%s\n", command);
@@ -334,7 +306,9 @@ void parse_Input(char* command){
 			printf("Invalid syntax, perhaps: set PATH\n");
 		}
 
-		// change HOME location
+		/*----------
+			HOME
+		-----------*/ 
 		else if(strncmp(command,"HOME",4) == 0){
 			
 			command += 4;
@@ -371,7 +345,9 @@ void parse_Input(char* command){
 
 	}
 
-	//NEXT COMMAND - CHANGE DIRECTORY
+	/*----------
+		CD
+	-----------*/ 
 	else if(strncmp(command,"cd",2) == 0){
 		//chdir(const char *path) changes current directory to 
 		//the directory specified in path
@@ -420,19 +396,25 @@ void parse_Input(char* command){
 		}
 	}
 
-	// QUIT
+	/*----------
+		QUIT
+	-----------*/ 
 	else if(strncmp(command,"quit",4) == 0){
 		printf("Exiting Quash... \n");
 		exit(0);
 	}
 
-	//EXIT
+	/*----------
+		EXIT
+	-----------*/ 
 	else if(strncmp(command,"exit",4) == 0){
 		printf("Exiting Quash... \n");
 		exit(0);
 	}
 
-	// JOBS
+	/*----------
+		JOBS
+	-----------*/ 
 	else if(strncmp(command,"jobs",4) == 0){
 		printf("\n Current Jobs:\n");
 		printf("Job ID, PID, Command\n\n");
@@ -444,11 +426,6 @@ void parse_Input(char* command){
 		}
 	}
 	
-	// PRINT WORKING DIRECTORY
-	else if(strncmp(command, "pwd", 3) == 0) {
-		char* prevDirectory = getcwd(NULL,1024);
-		printf("%s\n", prevDirectory);
-	}
 
 	//RUNNING EXECUTABLES
 	else if(strncmp(command,"./",2) == 0){
@@ -505,18 +482,9 @@ void parse_Input(char* command){
 				command++;
 			}
 
-			printf("command: %s\n", command);
+			int success = execlp(command, command, NULL);
 
-			char* inputPath = "/bin/";
-			//char* finalChar = '\0'; 
-			strcat(inputPath,command);
-			//strcat(inputPath, finalChar);
-
-			printf("HERE");
-
-			int success = execlp("/bin/", command, NULL);
-
-			if (success = -1) {
+			if (success == -1) {
 				printf("\nInvalid Command\n\n");
 				exit(0);
 			}
