@@ -47,18 +47,6 @@ bool hasSpaces(char c){
 }
 
 
-// not sure if this function is used? maybe delete?
-void set_Path(char* newPath){
-	char* temp = strtok(newPath, "=");
-	char* type = temp;
-	temp = strtok(newPath, "\0");
-	relPath = temp;
-
-	if((setenv(type, relPath, 1)) == -1){
-
-	}
-}
-
 /***************
 	< and > 
 ***************/ 
@@ -156,11 +144,11 @@ bool pipecommand (char* leftarg, char* rightarg) {
 	int fdpipe[2];
 	pipe(fdpipe);
 
-	int pid_t = fork();
+	pid_t pid = fork();
 
 	int status;
 
-	if (pid_t == 0) {
+	if (pid == 0) {
 		
 		close(fdpipe[0]);
 		
@@ -183,13 +171,51 @@ bool pipecommand (char* leftarg, char* rightarg) {
 		close(fdpipe[0]);
 
 		// must wait on child to finish
-		waitpid(pid_t,&status, 0);
+		waitpid(pid,&status, 0);
 
 		execvp(*duprightarg, duprightarg);
 
 	}
 
 }
+
+/******************************
+		BACKGROUND FUNCTION
+******************************/
+
+void execBackgroundFunction(char* command){
+	pid_t pid;
+	int status;
+
+	pid = fork();
+
+	if(pid < 0){
+		printf("Error in executing background function");
+		exit(0);
+	}
+	if(pid == 0){	//child process
+
+		printf("child process\n\n");
+
+	}
+	else {
+
+		struct Job new_job;
+		new_job.pid = pid;
+		new_job.id = job_count;
+		new_job.cmd = command;
+
+		jobs[job_count] = new_job;
+		job_count++;
+
+		while(waitpid(pid, &status, WNOHANG) > 0){
+		
+		}
+		return;
+	}
+	
+}
+
 
 /******************************
 		PARSING INPUT
@@ -205,7 +231,7 @@ void parse_Input(char* command){
 		printf("\n\n COMMAND HELP\n\n");
 		printf("set (PATH | HOME) (args) \n");
 		printf("cd (args)\n");
-		printf("./(exec) (args)\n");
+		printf("(exec) (args)\n");
 		printf("< = redirect input\n");
 		printf("> = redirect output\n");
 		printf("| used for piping\n\n\n");
@@ -238,7 +264,10 @@ void parse_Input(char* command){
 	else if(strncmp(command,"set",3) == 0){
 	//do ++ on command
 	//printf("%s\n", command);
-	command += 4;
+	command += 3;
+	while(hasSpaces(command[0])){
+		command++;
+	}
 
 		// change PATH location
 		if(strncmp(command,"PATH",4) == 0){
@@ -250,7 +279,7 @@ void parse_Input(char* command){
 			}
 			//remove actual pathway from command, characters
 			//between spaces
-			printf("command:\n %s\n", command);
+			//printf("command:\n %s\n", command);
 			if(strncmp(command,"=",1) == 0){
 				//printf("command: %s\n", command);
 				char* newPath = strstr(command, "/");
@@ -273,6 +302,7 @@ void parse_Input(char* command){
 			// Invalid path syntax
 			else{
 				printf("Invalid path syntax\n");
+				
 			}
 
 		}
@@ -314,7 +344,8 @@ void parse_Input(char* command){
 		}
 
 		else {
-			printf("Invalid parameter\n");
+			printf("New path syntax\n");
+			printf("command: %s\n", command);
 		}
 
 		command = "\0";
@@ -337,11 +368,11 @@ void parse_Input(char* command){
 		
 		if (command[1] == '\0' || command[1] == '<' || command[1] == '>') {
 			if(chdir(getenv("HOME")) != 0){
-				printf("the home directory is: %s\n", getenv("HOME"));
+				//printf("the home directory is: %s\n", getenv("HOME"));
 				printf("Failed to change to HOME, change HOME path\n");
 			}
 			else {
-				printf("You are now at: %s\n", getenv("HOME"));
+				printf("\n");
 			}
 		}
 
@@ -364,14 +395,14 @@ void parse_Input(char* command){
 			strcat(prevDirectory, command);	
 
 			int ret = chdir(prevDirectory);
-			printf("%s\n", prevDirectory);
+			//printf("%s\n", prevDirectory);
                 
 			// if the directory doesnt exist then error
 			if (ret == -1) {
-                                printf("Change directory unsuccessful.\nPlease try again\n");
+                                printf("Change directory unsuccessful.\n");
                         }
 			else {
-				printf("You changed directories to:\n%s\n", prevDirectory);
+				printf("\n");
 			}
 
 		}
@@ -408,7 +439,7 @@ void parse_Input(char* command){
 	}
 	
 
-	//RUNNING EXECUTABLES
+	/*/RUNNING EXECUTABLES - I dont think we need this anymore
 	else if(strncmp(command,"./",2) == 0){
 		//command+=2;
 
@@ -444,77 +475,91 @@ void parse_Input(char* command){
 			default: ;
 				/*struct Job new_job = {.pid = pid, .id = job_count, .cmd = command};
 				jobs[job_count] = new_job;
-				job_count++;*/
+				job_count++;
 				while(wait(NULL) != pid){}
 				break;
 		}
 
 		printf("[%d] %d Finished %s\n\n", jobs[job_count].id, jobs[job_count].pid, jobs[job_count].cmd);
-	}
+	}*/
 
 	else{
-		pid_t pid;
-		pid = fork();
-		int status;
-		char* args;
 
-		if (pid == 0) {
-			while ((command[0]) == ' ') {
-				command++;
-			}
+		/*
+		Check for background process
+		*/
 
-			command[strlen(command)] = '\0';
+		if(index(command, '&') != NULL){
+			execBackgroundFunction(command);
+		}
+	
+		else {
 
-			// check to see if there is an execuatable 
-			//args = index(command, ' ');
-			if (index(command, ' ') == NULL) {
-				args = NULL;
-			}
-			else {
-				args = index(command, ' ');
-				args++;
+			pid_t pid;
+			pid = fork();
+			int status;
+			char* args;
 
-				// if there is an accedential space
-				if (args[0] == '\0') {
-					command[strlen(command)-1] ='\0';
+			if (pid == 0) {
+				while ((command[0]) == ' ') {
+					command++;
+				}
+
+				command[strlen(command)] = '\0';
+
+				// check to see if there is an execuatable 
+				//args = index(command, ' ');
+				if (index(command, ' ') == NULL) {
 					args = NULL;
 				}
-				
-				args[strlen(args)] = '\0';
+				else {
+					args = index(command, ' ');
+					args++;
 
-			}
+					// if there is an accedential space
+					if (args[0] == '\0') {
+						command[strlen(command)-1] ='\0';
+						args = NULL;
+					}
+					
+					args[strlen(args)] = '\0';
 
-			if (args == NULL) {
-
-				int success = execlp(command, command, NULL);
-
-				if (success == -1) {
-					printf("\nInvalid Command\n\n");
-					exit(0);
 				}
 
-			}
+				if (args == NULL) {
 
+					int success = execlp(command, command, NULL);
+
+					if (success == -1) {
+						printf("\nInvalid Command\n\n");
+						exit(0);
+					}
+
+				}
+
+				else {
+					char* action;
+					//char space[] = ' ';
+					int i = 0;
+					
+					action = strtok(command, " ");
+
+					int success = execlp(action, action, args, (char *)NULL);
+
+					if (success == -1) {
+						printf("\nInvalid Command\nPerhaps the wrong arguments\n");
+						exit(0);
+					}
+				}
+
+
+			}
 			else {
-				char* action;
-				//char space[] = ' ';
-				int i = 0;
-				
-				action = strtok(command, " ");
-
-				int success = execlp(action, action, args, (char *)NULL);
-
-				if (success == -1) {
-					printf("\nInvalid Command\nPerhaps the wrong arguments\n");
-					exit(0);
-				}
+				wait(&status);
 			}
 
+		}
 
-		}
-		else {
-			wait(&status);
-		}
 
 		
 	}
@@ -525,7 +570,7 @@ void parse_Input(char* command){
 MAIN FUNCTION
 *************************/
 int main(int argc, char **argv, char **envp) {
-	char input[64];
+	char input[1024];
 	char* inputBuffer[32];
 	//pid_t my_pid;
 	//my_pid = getpid();
