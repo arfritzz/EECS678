@@ -236,32 +236,38 @@ void parse_Input(char* command){
 		SET
 	-----------*/ 
 	else if(strncmp(command,"set",3) == 0){
+	
 	//do ++ on command
-	//printf("%s\n", command);
 	command += 4;
 
-		// change PATH location
+		/*----------
+			PATH
+		-----------*/ 
 		if(strncmp(command,"PATH",4) == 0){
 			// used to get locations of all paths
 			//remove PATH from command, remove following spaces
 			command += 4;
+
 			while(hasSpaces(command[0])){
 				command++;
 			}
+
 			//remove actual pathway from command, characters
 			//between spaces
 			printf("command:\n %s\n", command);
+
 			if(strncmp(command,"=",1) == 0){
-				//printf("command: %s\n", command);
+			
 				char* newPath = strstr(command, "/");
-				//printf("new Path: %s\n", newPath);
-				strcat(relPath,":");
+			
+				//strcat(relPath,":");
 
 				// if the new path is different 
 				//then the old path
-				strcat(relPath,newPath);
+				//strcat(relPath,newPath);
 
-				if((setenv("PATH",relPath,0))< 0){
+				//if((setenv("PATH",relPath,0))< 0){
+				if((setenv("PATH",newPath,0))< 0){
 					printf("path set error\n");
 				}
 				else {
@@ -452,6 +458,12 @@ void parse_Input(char* command){
 		printf("[%d] %d Finished %s\n\n", jobs[job_count].id, jobs[job_count].pid, jobs[job_count].cmd);
 	}
 
+
+
+	/*----------
+		RUNNING
+		EXECUTABLES
+	-----------*/ 
 	else{
 		pid_t pid;
 		pid = fork();
@@ -484,6 +496,12 @@ void parse_Input(char* command){
 
 			}
 
+
+
+			/*----------
+				WITHOUT
+				ARGS
+			-----------*/ 
 			if (args == NULL) {
 
 				int success = execlp(command, command, NULL);
@@ -495,9 +513,13 @@ void parse_Input(char* command){
 
 			}
 
+
+			/*----------
+				WITH 
+				ARGS
+			-----------*/ 
 			else {
 				char* action;
-				//char space[] = ' ';
 				int i = 0;
 				
 				action = strtok(command, " ");
