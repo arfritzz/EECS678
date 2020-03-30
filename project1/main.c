@@ -211,50 +211,26 @@ void parse_Input(char* command){
 		printf("| used for piping\n\n\n");
 	}
 
-		//INPUT OUTPUT REDIRECTION
-        //redirect input
+	/*----------
+		<
+	-----------*/
 	else if (index(command, '<') != NULL) {
 		redirect(60, command);	
 	}
 
-	//redirect output
+	/*----------
+		>
+	-----------*/
 	else if (index(command, '>') != NULL) {
 		redirect(62, command);
 	}
 
-	//PIPING
+	/*----------
+		PIPE
+	-----------*/
 	else if (strstr(command, "|")) {
 		redirect('|', command);
 	}
-
-	/*else if(strncmp(command,"uname",5) == 0){
-		if(uname(&unameData) == 0){
-			printf("%s\n", unameData.sysname);
-			printf("%s\n", unameData.nodename);
-			printf("%s\n", unameData.release);
-			printf("%s\n", unameData.version);
-			printf("%s\n", unameData.machine);
-		}
-		else {
-			printf("Error retrieving system information\n\n");
-		}
-	}
-
-	else if(strncmp(command,"printenv",8) == 0){
-		command+=8;
-		while(hasSpaces(command[0])){
-			command++;
-		}
-
-		if(strncmp(command,"HOME",4) == 0){
-			printf("HOME: %s\n", homePath);
-		}
-
-		else if(strncmp(command,"PATH",4) == 0){
-			printf("PATH: %s\n", relPath);
-		}
-	}
-	*/
 
 	/*----------
 		SET
@@ -475,19 +451,61 @@ void parse_Input(char* command){
 		pid_t pid;
 		pid = fork();
 		int status;
+		char* args;
 
 		if (pid == 0) {
-			// check to see if there is an execuatable 
 			while ((command[0]) == ' ') {
 				command++;
 			}
 
-			int success = execlp(command, command, NULL);
+			command[strlen(command)] = '\0';
 
-			if (success == -1) {
-				printf("\nInvalid Command\n\n");
-				exit(0);
+			// check to see if there is an execuatable 
+			//args = index(command, ' ');
+			if (index(command, ' ') == NULL) {
+				args = NULL;
 			}
+			else {
+				args = index(command, ' ');
+				args++;
+
+				// if there is an accedential space
+				if (args[0] == '\0') {
+					command[strlen(command)-1] ='\0';
+					args = NULL;
+				}
+				
+				args[strlen(args)] = '\0';
+
+			}
+
+			if (args == NULL) {
+
+				int success = execlp(command, command, NULL);
+
+				if (success == -1) {
+					printf("\nInvalid Command\n\n");
+					exit(0);
+				}
+
+			}
+
+			else {
+				char* action;
+				//char space[] = ' ';
+				int i = 0;
+				
+				action = strtok(command, " ");
+
+				int success = execlp(action, action, args, (char *)NULL);
+
+				if (success == -1) {
+					printf("\nInvalid Command\nPerhaps the wrong arguments\n");
+					exit(0);
+				}
+			}
+
+
 		}
 		else {
 			wait(&status);
