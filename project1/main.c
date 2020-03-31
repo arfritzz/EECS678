@@ -132,30 +132,18 @@ bool pipecommand (char* leftArg, char* rightArg) {
 	int status;
 
 	if (pid == 0) {
-		//child writes its output to a pipe
-		close(pipefd[0]);
-
-		dup2(pipefd[1], 1);
-
-		//close(pipefd[1]);
-
-		parse_Input(leftArg);
-		//execlp(leftArg, leftArg, NULL);
-
-		exit(1);
-
-	}
-
-	else {
-		//parent reads args
+		
+		dup2(pipefd[0],0);
 		close(pipefd[1]);
-		dup2(pipefd[0], 0);
-		//parse_Input(rightArg);
-		execlp(rightArg, rightArg, NULL);
+		parse_Input(rightArg);
 		exit(1);
 	}
-	close(pipefd[0]);
-	close(pipefd[1]);
+	else {
+		dup2(pipefd[1], 1);
+		close(pipefd[0]);
+		parse_Input(leftArg);
+		exit(1);
+	}
 
 }
 
