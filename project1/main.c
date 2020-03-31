@@ -127,22 +127,28 @@ bool pipecommand (char* leftArg, char* rightArg) {
 	int pipefd[2];
 	pipe(pipefd);
 
-	pid_t pid = fork();
+	pid_t pid1, pid2;
+	pid1 = fork();
 
-	int status;
-
-	if (pid == 0) {
-		dup2(pipefd[0],0);
-		close(pipefd[1]);
-		parse_Input(rightArg);
-		exit(0);
-	}
-	else {
+	if (pid1 == 0) {
 		dup2(pipefd[1], 1);
 		close(pipefd[0]);
+		//close(pipefd[1]);
 		parse_Input(leftArg);
-		exit(0);
+		exit(1);
 	}
+
+	pid2 = fork();
+	if (pid2 == 0) {
+		dup2(pipefd[0],0);
+		//close(pipefd[0]);
+		close(pipefd[1]);
+		parse_Input(rightArg);
+		exit(1);
+	}
+
+	close(pipefd[0]);
+	close(pipefd[1]);
 
 }
 
@@ -546,7 +552,7 @@ int main(int argc, char **argv, char **envp) {
 
 	    homePath = getenv("HOME");
 		relPath = getenv("PATH");
-		while(1){
+		while(!0){
 			int inputStart = 0;
 
 			cwd = getcwd(NULL,1024);
