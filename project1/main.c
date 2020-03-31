@@ -132,17 +132,16 @@ bool pipecommand (char* leftArg, char* rightArg) {
 	int status;
 
 	if (pid == 0) {
-		
 		dup2(pipefd[0],0);
 		close(pipefd[1]);
 		parse_Input(rightArg);
-		exit(1);
+		exit(0);
 	}
 	else {
 		dup2(pipefd[1], 1);
 		close(pipefd[0]);
 		parse_Input(leftArg);
-		exit(1);
+		exit(0);
 	}
 
 }
@@ -239,7 +238,7 @@ void parse_Input(char* command){
 	}
 
 		/*----------
-			PATH
+			SET PATH
 		-----------*/ 
 		if(strncmp(command,"PATH",4) == 0){
 			// used to get locations of all paths
@@ -256,14 +255,7 @@ void parse_Input(char* command){
 			if(strncmp(command,"=",1) == 0){
 			
 				char* newPath = strstr(command, "/");
-			
-				//strcat(relPath,":");
 
-				// if the new path is different 
-				//then the old path
-				//strcat(relPath,newPath);
-
-				//if((setenv("PATH",relPath,0))< 0){
 				if((setenv("PATH",newPath,0))< 0){
 					printf("path set error\n");
 				}
@@ -287,7 +279,7 @@ void parse_Input(char* command){
 		}
 
 		/*----------
-			HOME
+			SET HOME
 		-----------*/ 
 		else if(strncmp(command,"HOME",4) == 0){
 			
@@ -407,7 +399,7 @@ void parse_Input(char* command){
 
 		for(int i=0; i < job_count; i++){
 			if(kill(jobs[i].pid, 0) == 0){
-				printf(" (%d) %d || %s\n\n", jobs[i].id, jobs[i].pid, jobs[i].cmd);
+				printf("[%d] %d || %s\n\n", jobs[i].id, jobs[i].pid, jobs[i].cmd);
 			}
 		}
 	}
@@ -549,6 +541,9 @@ int main(int argc, char **argv, char **envp) {
 
 
 	else {
+		//putenv("PATH=/usr/bin");
+		//printf("idk: %s\n", getenv("PATH"));
+
 	    homePath = getenv("HOME");
 		relPath = getenv("PATH");
 		while(1){
