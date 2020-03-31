@@ -32,7 +32,6 @@ char* homePath;
 //used to keep track of 
 //current path for cd
 char* cwd;
-struct utsname unameData;
 
 char* command;
 void parse_Input(char* command);
@@ -51,42 +50,31 @@ bool hasSpaces(char c){
 	< and > 
 ***************/ 
 void executeRedirection(char direction, char* action, char* filename) {
-	
-	// redirect
-	// standard output to the file "filename"
 
-	if (direction == '>') {
+	pid_t pid = fork();
+	int success, done; 
 
-		pid_t pid = fork();
-		int success; 
+	if (pid == 0) {
+		action[strlen(action)] ='\0';
 
-		if (pid == 0) {
-			//child needs to inherit environment variables
-			FILE* fd = freopen(filename, "w", stdout);
+		if (direction == '<') {
+			int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+			dup2(fd,0);
+			close(fd);
 			parse_Input(action);
-
-			if (fd != NULL) {
-				int val = fileno(fd);
-			}
-			//execlp(action, filename, NULL);
-			// need a way to exit out of the child?
 			exit(1);
 		}
-		
+
 		else {
-			waitpid(pid, &success, 0);
-			//exit(1);
-			// parent doesnt need to do anything
+			int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+			dup2(fd,1);
+			close(fd);
+			parse_Input(action);
+			exit(1);
 		}
 	}
-
-	// direction is false so redirect in
 	else {
-		//send result of left arg to right arg destination
-        int finalfile = dup(0);
-		freopen(filename, "r", stdin);
-		parse_Input(action);
-		stdin = fdopen(finalfile, "r");
+		wait(&done);
 
 	}
 }
@@ -133,49 +121,41 @@ bool redirect (char direction, char* command) {
 /*************
 	PIPING
 *************/
-bool pipecommand (char* leftarg, char* rightarg) {
+bool pipecommand (char* leftArg, char* rightArg) {
 	
 	// sends output of left arg as input to right arg
-
-	char** dupleftarg;
-	char** duprightarg;
-	dupleftarg[0] = leftarg;
-	duprightarg[0] = rightarg; 
-	int fdpipe[2];
-	pipe(fdpipe);
+	int pipefd[2];
+	pipe(pipefd);
 
 	pid_t pid = fork();
 
 	int status;
 
 	if (pid == 0) {
-		
-		close(fdpipe[0]);
-		
-		// 1 is standard out
-		// old file descriptor is fdpipe[1] (write end)
-		// new file descriptor is standard out
-		dup2(fdpipe[1], 1);
-		close(fdpipe[1]);
+		//child writes its output to a pipe
+		close(pipefd[0]);
 
-		execvp(*dupleftarg, dupleftarg);
+		dup2(pipefd[1], 1);
 
-		exit(0);
+		//close(pipefd[1]);
+
+		parse_Input(leftArg);
+		//execlp(leftArg, leftArg, NULL);
+
+		exit(1);
+
 	}
+
 	else {
-		close(fdpipe[1]);
-		// 0 is standard in 
-		// old file descriptor is fdpipe[0] (read end)
-		// new file descriptor is standard in
-		dup2(fdpipe[0], 0);
-		close(fdpipe[0]);
-
-		// must wait on child to finish
-		waitpid(pid,&status, 0);
-
-		execvp(*duprightarg, duprightarg);
-
+		//parent reads args
+		close(pipefd[1]);
+		dup2(pipefd[0], 0);
+		//parse_Input(rightArg);
+		execlp(rightArg, rightArg, NULL);
+		exit(1);
 	}
+	close(pipefd[0]);
+	close(pipefd[1]);
 
 }
 
@@ -496,6 +476,10 @@ void parse_Input(char* command){
 				if (args == NULL) {
 
 					int success = execlp(command, command, NULL);
+					if (success == -1) {
+						printf("\nInvalid Command\n\n");
+						exit(0);
+					}
 				}
 
 				/*----------
