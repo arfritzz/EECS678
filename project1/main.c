@@ -133,10 +133,36 @@ bool pipecommand (char* leftArg, char* rightArg) {
 	int status1, status2;
 
 	if (pid1 == 0) {
+		dup2(pipefd[1],1);
+		close(pipefd[1]);
+		close(pipefd[0]);
+		parse_Input(leftArg);
+		exit(1);
+	}
+	else {
+		pid1 = fork();
+
+		if(pid1 == 0) {
+			dup2(pipefd[0], 0);
+			close(pipefd[0]);
+			close(pipefd[1]);
+			parse_Input(rightArg);
+			exit(1);
+		}
+
+		wait(NULL);
+	}
+
+	close(pipefd[0]);
+	close(pipefd[1]);
+	wait(NULL);
+
+	/*if (pid1 == 0) {
 		dup2(pipefd[1], 1);
 		close(pipefd[0]);
 		close(pipefd[1]);
 		parse_Input(leftArg);
+		//return true;
 		exit(1);
 	}
 	
@@ -151,6 +177,8 @@ bool pipecommand (char* leftArg, char* rightArg) {
 
 	close(pipefd[0]);
 	close(pipefd[1]);
+
+	return true;*/
 
 }
 
