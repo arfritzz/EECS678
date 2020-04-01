@@ -157,29 +157,6 @@ bool pipecommand (char* leftArg, char* rightArg) {
 	close(pipefd[1]);
 	wait(NULL);
 
-	/*if (pid1 == 0) {
-		dup2(pipefd[1], 1);
-		close(pipefd[0]);
-		close(pipefd[1]);
-		parse_Input(leftArg);
-		//return true;
-		exit(1);
-	}
-	
-	pid2 = fork();
-	if (pid2 == 0) {
-		dup2(pipefd[0],0);
-		close(pipefd[0]);
-		close(pipefd[1]);
-		parse_Input(rightArg);
-		exit(1);
-	}
-
-	close(pipefd[0]);
-	close(pipefd[1]);
-
-	return true;*/
-
 }
 
 /******************************
