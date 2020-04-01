@@ -132,23 +132,23 @@ bool pipecommand (char* leftArg, char* rightArg) {
 
 	if (pid1 == 0) {
 		dup2(pipefd[1], 1);
-		close(pipefd[0]);
-		//close(pipefd[1]);
 		parse_Input(leftArg);
-		exit(1);
+		close(pipefd[0]);
+		close(pipefd[1]);
+		exit(0);
 	}
 
 	pid2 = fork();
 	if (pid2 == 0) {
 		dup2(pipefd[0],0);
-		//close(pipefd[0]);
-		close(pipefd[1]);
 		parse_Input(rightArg);
-		exit(1);
+		close(pipefd[0]);
+		close(pipefd[1]);
+		exit(0);
 	}
 
-	close(pipefd[0]);
-	close(pipefd[1]);
+	//close(pipefd[0]);
+	//close(pipefd[1]);
 
 }
 
@@ -410,6 +410,48 @@ void parse_Input(char* command){
 		}
 	}
 
+
+	/*-----------
+	   KILL CMD
+	-------------*/
+	else if(strncmp(command, "kill", 4) == 0) {
+		command+=4;
+		//command has format kill SIGNUM JOBID
+		int signum;
+		pid_t jobid;
+		
+		while (hasSpaces(command[0])) {
+			command++;
+		}
+
+		char charsignum[32];
+		char charjobid[32];
+
+		int i,j = 0;
+
+		while(command[i] != ' ') {
+			charsignum[i] = command[i];
+			i++;
+		}
+		charsignum[i] = '\0';
+
+		command++;
+
+		while(command[i] != '\0') {
+			charjobid[j] = command[i];
+			j++;
+			i++;
+		}
+		charjobid[j]= '\0';
+
+		printf("signum %s, jobid %s\n", charsignum, charjobid);
+
+		sscanf(charsignum, "%d", &signum);
+		sscanf(charjobid, "%d", &jobid);
+
+		kill(jobid, signum);
+	}
+
 	/*----------
 		RUNNING
 		EXECUTABLES
@@ -552,7 +594,7 @@ int main(int argc, char **argv, char **envp) {
 
 	    homePath = getenv("HOME");
 		relPath = getenv("PATH");
-		while(!0){
+		while(1){
 			int inputStart = 0;
 
 			cwd = getcwd(NULL,1024);
@@ -571,6 +613,8 @@ int main(int argc, char **argv, char **envp) {
 			}
 
 			parse_Input(input);
+
+			//free(input);
 		}
 	}
 }
