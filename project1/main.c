@@ -66,6 +66,7 @@ void executeRedirection(char direction, char* action, char* filename) {
 		}
 
 		else {
+			printf("\n	Checkout %s for your output!\n\n", filename);
 			int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 			dup2(fd,1);
 			close(fd);
@@ -85,37 +86,35 @@ REDIRECTION
 *******************/
 bool redirect (char direction, char* command) {
 	//left argument
-		char leftArg[1024];
-		int position = 0;
-		while (command[position] != direction) {
+	char leftArg[1024];
+	int position = 0;
+	while (command[position] != direction) {
 			leftArg[position] = command[position];
-			position++;
-		}
-		leftArg[position] = '\0';
-		printf("The left arg is: %s\n", leftArg);
+		position++;
+	}
+	leftArg[position] = '\0';
 	
 	//right argument
-		char* rightArg = strrchr(command, direction);
+	char* rightArg = strrchr(command, direction);
+	rightArg++;
+	position = 0;
+	while (rightArg[position] == 32) {
 		rightArg++;
-		position = 0;
-		while (rightArg[position] == 32) {
-			rightArg++;
-		}
+	}
 
-		while(rightArg[position] != ' ') {
-			position++;
-		}
-		rightArg[position] = '\0';
-		printf("The right arg is: %s\n", rightArg);
+	while(rightArg[position] != ' ') {
+		position++;
+	}
+	rightArg[position] = '\0';
 
 	// if direction is pipe
-		if (direction == '|') {
-			pipecommand(leftArg, rightArg);
-		}
-		else {
-			// pass to function
-			executeRedirection(direction, leftArg, rightArg);		
-		}
+	if (direction == '|') {
+		pipecommand(leftArg, rightArg);
+	}
+	else {
+		// pass to function
+		executeRedirection(direction, leftArg, rightArg);		
+	}
 }
 
 /*************
@@ -127,7 +126,7 @@ bool pipecommand (char* leftArg, char* rightArg) {
 	int pipefd[2];
 	pipe(pipefd);
 
-	pid_t pid1, pid2;
+	pid_t pid1;
 	pid1 = fork();
 
 	int status1, status2;
