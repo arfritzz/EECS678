@@ -130,25 +130,27 @@ bool pipecommand (char* leftArg, char* rightArg) {
 	pid_t pid1, pid2;
 	pid1 = fork();
 
+	int status1, status2;
+
 	if (pid1 == 0) {
 		dup2(pipefd[1], 1);
-		parse_Input(leftArg);
 		close(pipefd[0]);
 		close(pipefd[1]);
-		exit(0);
+		parse_Input(leftArg);
+		exit(1);
 	}
-
+	
 	pid2 = fork();
 	if (pid2 == 0) {
 		dup2(pipefd[0],0);
-		parse_Input(rightArg);
 		close(pipefd[0]);
 		close(pipefd[1]);
-		exit(0);
+		parse_Input(rightArg);
+		exit(1);
 	}
 
-	//close(pipefd[0]);
-	//close(pipefd[1]);
+	close(pipefd[0]);
+	close(pipefd[1]);
 
 }
 
