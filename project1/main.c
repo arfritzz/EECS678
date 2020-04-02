@@ -236,6 +236,9 @@ void parse_Input(char* command){
 		PIPE
 	-----------*/
 	else if (strstr(command, "|")) {
+		if (index(command, "|") != rindex(command, "|")) {
+			
+		}
 		redirect('|', command);
 	}
 
@@ -270,13 +273,20 @@ void parse_Input(char* command){
 			
 				char* newPath = strstr(command, "/");
 
-				if((setenv("PATH",newPath,0))< 0){
-					printf("path set error\n");
+				if (newPath == NULL) {
+					printf("Incorrect path name. Try again\n\n");
+					exit(0);
 				}
-				else {
-					relPath = getenv("PATH");
-					printf("new PATH variable: %s\n", relPath);
+				else{
+					if((setenv("PATH",newPath,0))< 0){
+						printf("path set error\n");
+					}
+					else {
+						relPath = getenv("PATH");
+						printf("new PATH variable: %s\n", relPath);
+					}
 				}
+
 			}
 
 			// Invalid path syntax
