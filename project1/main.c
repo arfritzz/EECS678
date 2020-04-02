@@ -197,9 +197,11 @@ void execBackgroundFunction(char* command){
 	}
 	if(pid == 0){	
 		//child process
+		printf("\n[%d] %d running in background\n", job_count+1, getpid());
 		sleep(1);
 		parse_Input(command);
-		//kill(jobs[i].pid, 0)
+		printf("[%d] %d finished %s\n", job_count+1, getpid(), command);
+		kill(getpid(), SIGCHLD);
 		exit(0);
 	}
 	else {
