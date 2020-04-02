@@ -18,7 +18,10 @@
 struct Job {
 	pid_t pid;
 	int id;
-	char* cmd;
+	char cmd [300];
+
+	// if done, finsihed = 1, else it = 0
+	int finished;
 };
 
 static struct Job jobs[64];
@@ -196,6 +199,7 @@ void execBackgroundFunction(char* command){
 		//child process
 		sleep(1);
 		parse_Input(command);
+		//kill(jobs[i].pid, 0)
 		exit(0);
 	}
 	else {
@@ -203,7 +207,8 @@ void execBackgroundFunction(char* command){
 		struct Job new_job;
 		new_job.pid = pid;
 		new_job.id = job_count;
-		new_job.cmd = correctcommand;
+		strcpy(new_job.cmd,correctcommand);
+		new_job.finished = 0;
 
 		jobs[job_count] = new_job;
 		job_count++;
