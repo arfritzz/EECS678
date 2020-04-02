@@ -166,21 +166,11 @@ bool pipecommand (char* leftArg, char* rightArg) {
 ******************************/
 
 void execBackgroundFunction(char* command){
+
 	pid_t pid;
 	int status;
 
 	pid = fork();
-
-	char correctcommand[512];
-
-	if (index(command, '&') != NULL) {
-		stpcpy(correctcommand, command);
-		//remove the &
-		int corrlen = strlen(correctcommand);
-		correctcommand[corrlen] = '\0';
-		correctcommand[corrlen-1] = '\0';
-		correctcommand[corrlen-2] = '\0';
-	}
 
 	//remove the &
 	int j, commandlen = strlen(command);
@@ -197,11 +187,25 @@ void execBackgroundFunction(char* command){
 	}
 	if(pid == 0){	
 		//child process
-		//printf("\n[%d] %d running in background\n", job_count+1, getpid());
+		printf("\n[%d] %d running in background\n", job_count, getpid());
 		sleep(1);
 		parse_Input(command);
-		//printf("[%d] %d finished %s\n", job_count+1, getpid(), command);
-		//kill(getpid(), SIGCHLD);
+		printf("[%d] %d finished %s\n", job_count, getpid(), command);
+		jobs[job_count].finished = 100;
+		printf("job count: %d\n", job_count);
+
+		//find job index 
+		for (int i = 0; i <= job_count; i++) {
+			printf("jobs @ %d: %d == %d\n", i, getpid(), jobs[i].pid);
+			if (jobs[i].pid == 0) {
+				jobs[i].finished = 1;
+				exit(0);
+				printf("\nhere\n");
+			}
+			else {
+				printf("not here\n");
+			}
+		}
 		exit(0);
 	}
 	else {
@@ -209,7 +213,7 @@ void execBackgroundFunction(char* command){
 		struct Job new_job;
 		new_job.pid = pid;
 		new_job.id = job_count;
-		strcpy(new_job.cmd,correctcommand);
+		strcpy(new_job.cmd,command);
 		new_job.finished = 0;
 
 		jobs[job_count] = new_job;
@@ -446,7 +450,8 @@ void parse_Input(char* command){
 		printf("Job ID, PID, Command\n\n");
 
 		for(int i=0; i < job_count; i++){
-			if(kill(jobs[i].pid, 0) == 0){
+			if(jobs[i].finished == 0) {
+			//if(kill(jobs[i].pid, 0) == 0){
 				printf("[%d] %d || %s\n\n", jobs[i].id, jobs[i].pid, jobs[i].cmd);
 			}
 		}
