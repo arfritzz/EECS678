@@ -168,6 +168,17 @@ void execBackgroundFunction(char* command){
 
 	pid = fork();
 
+	char correctcommand[512];
+
+	if (index(command, '&') != NULL) {
+		stpcpy(correctcommand, command);
+		//remove the &
+		int corrlen = strlen(correctcommand);
+		correctcommand[corrlen] = '\0';
+		correctcommand[corrlen-1] = '\0';
+		correctcommand[corrlen-2] = '\0';
+	}
+
 	//remove the &
 	int j, commandlen = strlen(command);
 	for (int i=j=0; i < commandlen; i++){
@@ -192,7 +203,7 @@ void execBackgroundFunction(char* command){
 		struct Job new_job;
 		new_job.pid = pid;
 		new_job.id = job_count;
-		new_job.cmd = command;
+		new_job.cmd = correctcommand;
 
 		jobs[job_count] = new_job;
 		job_count++;
@@ -424,7 +435,7 @@ void parse_Input(char* command){
 		JOBS
 	-----------*/ 
 	else if(strncmp(command,"jobs",4) == 0){
-		printf("\n Current Jobs:\n");
+		printf("\nCurrent Jobs:\n");
 		printf("Job ID, PID, Command\n\n");
 
 		for(int i=0; i < job_count; i++){
