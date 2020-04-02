@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 // Anna Fritz and Mitch Simmons
 // Project 1
 // EECS 678
@@ -170,13 +168,27 @@ void execBackgroundFunction(char* command){
 
 	pid = fork();
 
+	//remove the &
+	int j, commandlen = strlen(command);
+	for (int i=j=0; i < commandlen; i++){
+		if(command[i] != '&'){
+			command[j++] = command[i];
+		}
+	}
+	command[j] = '\0';
+
+
+	//children
 	if(pid < 0){
 		printf("Error in executing background function");
 		exit(0);
 	}
 	if(pid == 0){	//child process
-
-		printf("child process\n\n");
+		printf("child process %d running, %d processes total\n", getpid(), job_count+1);
+		parse_Input(command);
+		printf("child process %d finished\n", getpid());
+		kill(getpid(), SIGCHLD);
+		exit(0);
 
 	}
 	else {
@@ -189,10 +201,7 @@ void execBackgroundFunction(char* command){
 		jobs[job_count] = new_job;
 		job_count++;
 
-		while(waitpid(pid, &status, WNOHANG) > 0){
-		
-		}
-		return;
+		waitpid(pid, &status, 0);
 	}
 	
 }
@@ -636,4 +645,3 @@ int main(int argc, char **argv, char **envp) {
 		}
 	}
 }
->>>>>>> a4e0868c2617654ff7f728c9ea827639d4384230
