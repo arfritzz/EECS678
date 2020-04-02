@@ -175,21 +175,17 @@ void execBackgroundFunction(char* command){
 			command[j++] = command[i];
 		}
 	}
-	command[j] = '\0';
+	command[j-1] = '\0';
 
-
-	//children
 	if(pid < 0){
 		printf("Error in executing background function");
 		exit(0);
 	}
-	if(pid == 0){	//child process
-		printf("child process %d running, %d processes total\n", getpid(), job_count+1);
+	if(pid == 0){	
+		//child process
+		sleep(1);
 		parse_Input(command);
-		printf("child process %d finished\n", getpid());
-		kill(getpid(), SIGCHLD);
 		exit(0);
-
 	}
 	else {
 
@@ -201,8 +197,9 @@ void execBackgroundFunction(char* command){
 		jobs[job_count] = new_job;
 		job_count++;
 
-		waitpid(pid, &status, 0);
 	}
+	waitpid(pid, &status, WNOHANG);
+	//wait(NULL);
 	
 }
 
@@ -245,9 +242,9 @@ void parse_Input(char* command){
 		PIPE
 	-----------*/
 	else if (strstr(command, "|")) {
-		if (index(command, "|") != rindex(command, "|")) {
+		//if (index(command, "|") != rindex(command, "|")) {
 			
-		}
+		//}
 		redirect('|', command);
 	}
 
@@ -435,6 +432,7 @@ void parse_Input(char* command){
 				printf("[%d] %d || %s\n\n", jobs[i].id, jobs[i].pid, jobs[i].cmd);
 			}
 		}
+		printf("\n");
 	}
 
 
@@ -485,9 +483,9 @@ void parse_Input(char* command){
 	-----------*/ 
 	else{
 
-		/*
+		/*------------------------
 		Check for background process
-		*/
+		--------------------------*/
 
 		if(index(command, '&') != NULL){
 			execBackgroundFunction(command);
@@ -555,17 +553,12 @@ void parse_Input(char* command){
 						exit(0);
 					}
 				}
-
-
 			}
 			else {
 				wait(&status);
 			}
-
-		}
-
-
-		
+			waitpid(pid, &status, 0);
+		}	
 	}
 }
 
@@ -616,23 +609,17 @@ int main(int argc, char **argv, char **envp) {
 
 
 	else {
-		//putenv("PATH=/usr/bin");
-		//printf("idk: %s\n", getenv("PATH"));
-
 	    homePath = getenv("HOME");
 		relPath = getenv("PATH");
 		while(1){
 			int inputStart = 0;
 
+			//waitpid(WNOHANG);
+
 			cwd = getcwd(NULL,1024);
 			printf("QUASH: %s : ", cwd);
 			fflush(stdout);
 			fgets(input, sizeof(input), stdin);
-
-			//relPath = getenv("PATH");
-			//printf("%s\n", relPath);
-			//homePath = getenv("HOME");
-			//printf("%s\n", homePath);
 
 			//Ensure input is good
 			if(strlen(input) > 0 && input[strlen(input)-1] == '\n'){
@@ -641,7 +628,6 @@ int main(int argc, char **argv, char **envp) {
 
 			parse_Input(input);
 
-			//free(input);
 		}
 	}
 }
