@@ -166,7 +166,6 @@ bool pipecommand (char* leftArg, char* rightArg) {
 ******************************/
 
 void execBackgroundFunction(char* command){
-
 	pid_t pid;
 	int status;
 
@@ -188,24 +187,9 @@ void execBackgroundFunction(char* command){
 	if(pid == 0){	
 		//child process
 		printf("\n[%d] %d running in background\n", job_count, getpid());
-		sleep(1);
 		parse_Input(command);
-		printf("[%d] %d finished %s\n", job_count, getpid(), command);
-		jobs[job_count].finished = 100;
-		printf("job count: %d\n", job_count);
-
-		//find job index 
-		for (int i = 0; i <= job_count; i++) {
-			printf("jobs @ %d: %d == %d\n", i, getpid(), jobs[i].pid);
-			if (jobs[i].pid == 0) {
-				jobs[i].finished = 1;
-				exit(0);
-				printf("\nhere\n");
-			}
-			else {
-				printf("not here\n");
-			}
-		}
+		printf("\n[%d] %d finished %s\nQUASH: %s : ", job_count, getpid(), command, getcwd(NULL,1024));
+		//jobs[job_count].finished = 1;
 		exit(0);
 	}
 	else {
@@ -220,7 +204,8 @@ void execBackgroundFunction(char* command){
 		job_count++;
 
 	}
-	waitpid(pid, &status, WNOHANG);
+	waitpid(-1,NULL,WNOHANG);
+	//waitpid(pid, &status, WNOHANG);
 	//wait(NULL);
 	
 }
@@ -450,10 +435,11 @@ void parse_Input(char* command){
 		printf("Job ID, PID, Command\n\n");
 
 		for(int i=0; i < job_count; i++){
-			if(jobs[i].finished == 0) {
+			if(waitpid(jobs[i].pid, NULL, WNOHANG) == 0){
 			//if(kill(jobs[i].pid, 0) == 0){
 				printf("[%d] %d || %s\n\n", jobs[i].id, jobs[i].pid, jobs[i].cmd);
 			}
+			//printf("job id %d\n", jobs[i].finished);
 		}
 		printf("\n");
 	}
