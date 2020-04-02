@@ -19,9 +19,6 @@ struct Job {
 	pid_t pid;
 	int id;
 	char cmd [300];
-
-	// if done, finsihed = 1, else it = 0
-	int finished;
 };
 
 static struct Job jobs[64];
@@ -60,6 +57,7 @@ void executeRedirection(char direction, char* action, char* filename) {
 	if (pid == 0) {
 		action[strlen(action)] ='\0';
 
+		// redirects standard input
 		if (direction == '<') {
 			int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 			dup2(fd,0);
@@ -68,6 +66,7 @@ void executeRedirection(char direction, char* action, char* filename) {
 			exit(1);
 		}
 
+		// redirects standard output
 		else {
 			printf("\n	Checkout %s for your output!\n\n", filename);
 			int fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
@@ -77,6 +76,9 @@ void executeRedirection(char direction, char* action, char* filename) {
 			exit(1);
 		}
 	}
+
+	// must wait so command line 
+	// prompt prints correctly
 	else {
 		wait(&done);
 
@@ -87,6 +89,9 @@ void executeRedirection(char direction, char* action, char* filename) {
 PARSING ARGS FOR
 REDIRECTION
 *******************/
+// this function is just a bunch
+// of parsing paramaters, 
+// nothing special 
 bool redirect (char direction, char* command) {
 	//left argument
 	char leftArg[1024];
@@ -134,6 +139,8 @@ bool pipecommand (char* leftArg, char* rightArg) {
 
 	int status1, status2;
 
+	// child is the left side of the pipe
+	// child's output directed to parent
 	if (pid1 == 0) {
 		dup2(pipefd[1],1);
 		close(pipefd[1]);
@@ -144,6 +151,10 @@ bool pipecommand (char* leftArg, char* rightArg) {
 	else {
 		pid1 = fork();
 
+		// within the parent, new process created
+		// the child of this process reads the 
+		// output of the first child and uses
+		// it as input
 		if(pid1 == 0) {
 			dup2(pipefd[0], 0);
 			close(pipefd[0]);
@@ -189,7 +200,6 @@ void execBackgroundFunction(char* command){
 		printf("\n[%d] %d running in background\n", job_count, getpid());
 		parse_Input(command);
 		printf("\n[%d] %d finished %s\nQUASH: %s : ", job_count, getpid(), command, getcwd(NULL,1024));
-		//jobs[job_count].finished = 1;
 		exit(0);
 	}
 	else {
@@ -198,16 +208,13 @@ void execBackgroundFunction(char* command){
 		new_job.pid = pid;
 		new_job.id = job_count;
 		strcpy(new_job.cmd,command);
-		new_job.finished = 0;
 
 		jobs[job_count] = new_job;
 		job_count++;
 
 	}
-	waitpid(-1,NULL,WNOHANG);
-	//waitpid(pid, &status, WNOHANG);
-	//wait(NULL);
-	
+	//waitpid(-1,NULL,WNOHANG);
+	waitpid(pid, &status, WNOHANG);	
 }
 
 
@@ -299,15 +306,12 @@ void parse_Input(char* command){
 						printf("new PATH variable: %s\n", relPath);
 					}
 				}
-
 			}
 
 			// Invalid path syntax
 			else{
 				printf("Invalid path syntax\n");
-				
 			}
-
 		}
 	
 
@@ -329,8 +333,6 @@ void parse_Input(char* command){
 			if(strncmp(command,"=",1) == 0){
 
 				char* newPath = strstr(command,"/");
-				//printf("command: %s\n", command);
-				//printf("new Path: %s\n", newPath);
 
 				if(setenv("HOME",newPath,1) < 0){
 					printf("path set error\n");
@@ -398,12 +400,11 @@ void parse_Input(char* command){
 			strcat(prevDirectory, command);	
 
 			int ret = chdir(prevDirectory);
-			//printf("%s\n", prevDirectory);
                 
 			// if the directory doesnt exist then error
 			if (ret == -1) {
-                                printf("Change directory unsuccessful.\n");
-                        }
+                printf("Change directory unsuccessful.\n");
+            }
 			else {
 				printf("\n");
 			}
@@ -436,10 +437,8 @@ void parse_Input(char* command){
 
 		for(int i=0; i < job_count; i++){
 			if(waitpid(jobs[i].pid, NULL, WNOHANG) == 0){
-			//if(kill(jobs[i].pid, 0) == 0){
 				printf("[%d] %d || %s\n\n", jobs[i].id, jobs[i].pid, jobs[i].cmd);
 			}
-			//printf("job id %d\n", jobs[i].finished);
 		}
 		printf("\n");
 	}
@@ -622,8 +621,6 @@ int main(int argc, char **argv, char **envp) {
 		relPath = getenv("PATH");
 		while(1){
 			int inputStart = 0;
-
-			//waitpid(WNOHANG);
 
 			cwd = getcwd(NULL,1024);
 			printf("QUASH: %s : ", cwd);
