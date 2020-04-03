@@ -28,6 +28,7 @@ int got_response = 0;
 char* relPath;
 int path_Size = 0;
 char* homePath;
+extern char **environ;
 
 //used to keep track of 
 //current path for cd
@@ -43,6 +44,10 @@ command is space deliminated
 ************************/ 
 bool hasSpaces(char c){
 	return(c == ' ' || c == '\n' || c == '\t');
+}
+
+char** mygetenv () {
+
 }
 
 
@@ -380,12 +385,36 @@ void parse_Input(char* command){
 		}
 
 		else {
-			printf("New path syntax\n");
-			printf("command: %s\n", command);
+			char leftArg[200];
+			char rightArg[200];
+
+			int i,j = 0;
+
+			while (command[i] != '=') {
+				leftArg[i] = command[i];
+				i++;
+			}
+			leftArg[i] = '\0';
+			while (command[i] == ' ' || command[i] == '=') {
+				i++;
+			}
+
+			while (i < strlen(command)) {
+				rightArg[j] = command[i];
+				i++;
+				j++;
+			}
+			rightArg[j] = '\0';
+			
+			printf("rightArg: %s\n", rightArg);
+			printf("leftArg: %s\n", leftArg);
+
+			command[strlen(command)] = '\0';
+
+			setenv(leftArg, rightArg, 1);
 		}
 
-		command = "\0";
-
+		command[strlen(command)] = '\0';
 	}
 
 	/*----------
@@ -660,6 +689,7 @@ int main(int argc, char **argv, char **envp) {
 			if(strlen(input) > 0 && input[strlen(input)-1] == '\n'){
 				input[strlen(input)-1] = '\0';
 			}
+
 
 			parse_Input(input);
 
