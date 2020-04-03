@@ -436,7 +436,7 @@ void parse_Input(char* command){
 		printf("Job ID, PID, Command\n\n");
 
 		for(int i=0; i < job_count; i++){
-			if(waitpid(jobs[i].pid, NULL, WNOHANG) == 0){
+			if(waitpid(jobs[i].pid, NULL, WNOHANG) == 0 || (kill(jobs[i].pid, 0) == 0)){
 				printf("[%d] %d || %s\n\n", jobs[i].id, jobs[i].pid, jobs[i].cmd);
 			}
 		}
@@ -457,18 +457,18 @@ void parse_Input(char* command){
 			command++;
 		}
 
-		char charsignum[32];
-		char charjobid[32];
+		char charsignum[100];
+		char charjobid[500];
 
 		int i,j = 0;
 
-		while(command[i] != ' ') {
+		while(command[i] != 32) {
 			charsignum[i] = command[i];
 			i++;
 		}
 		charsignum[i] = '\0';
 
-		command++;
+		i++;
 
 		while(command[i] != '\0') {
 			charjobid[j] = command[i];
@@ -476,8 +476,7 @@ void parse_Input(char* command){
 			i++;
 		}
 		charjobid[j]= '\0';
-
-		printf("signum %s, jobid %s\n", charsignum, charjobid);
+		//printf("signum %s, jobid %s\n", charsignum, charjobid);
 
 		sscanf(charsignum, "%d", &signum);
 		sscanf(charjobid, "%d", &jobid);
@@ -538,7 +537,7 @@ void parse_Input(char* command){
 
 					int success = execlp(command, command, NULL);
 					if (success == -1) {
-						printf("\nInvalid Command\n\n");
+						printf("\nInvalid Command\nExecutable not found.\n");
 						exit(0);
 					}
 				}
@@ -557,7 +556,7 @@ void parse_Input(char* command){
 					int success = execlp(action, action, args, (char *)NULL);
 
 					if (success == -1) {
-						printf("\nInvalid Command\nPerhaps the wrong arguments\n");
+						printf("\nInvalid Command\nPerhaps the wrong arguments\nOr executable not found\n");
 						exit(0);
 					}
 				}
