@@ -280,19 +280,19 @@ void parse_Input(char* command){
 		PIPE
 	-----------*/
 	else if (strstr(command, "|")) {
-		int args, i = 0;
-		while(i < strlen(command)) {
-			if(command[i] == '|') {
-				args++;
-			}
-			i++;
-		}
-		if (args > 1) {
-			multipipe(command);
-		}
-		else {
+		//int args, i = 0;
+		//while(i < strlen(command)) {
+		//	if(command[i] == '|') {
+		//		args++;
+		//	}
+		//	i++;
+		//}
+		//if (args > 1) {
+		//	multipipe(command);
+		//}
+		//else {
 			redirect('|', command);
-		}
+		//}
 	}
 
 	/*----------
