@@ -536,6 +536,7 @@ void parse_Input(char* command){
 				if (args == NULL) {
 
 					int success = execlp(command, command, NULL);
+					//int success = execlpe(command, command, NULL, getenv("PATH"));
 					if (success == -1) {
 						printf("\nInvalid Command\nExecutable not found.\n");
 						exit(0);
