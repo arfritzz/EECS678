@@ -129,7 +129,10 @@ bool redirect (char direction, char* command) {
 	PIPING
 *************/
 bool pipecommand (char* leftArg, char* rightArg) {
-	
+	leftArg[strlen(leftArg)-1] = '\0';
+	rightArg[strlen(rightArg)] = '\0';
+
+
 	// sends output of left arg as input to right arg
 	int pipefd[2];
 	pipe(pipefd);
@@ -170,6 +173,22 @@ bool pipecommand (char* leftArg, char* rightArg) {
 	close(pipefd[1]);
 	wait(NULL);
 
+}
+
+/*---------------------------
+PIPING MULTIPLE
+*----------------------------*/
+void multipipe(char* command) {
+	int i,args = 0;
+
+	while(command[i] != '\0') {
+		if(command[i] == '|') {
+			args++;
+		}
+		i++;
+	}
+
+	printf("this many %d\n", args);
 }
 
 /******************************
@@ -256,10 +275,19 @@ void parse_Input(char* command){
 		PIPE
 	-----------*/
 	else if (strstr(command, "|")) {
-		//if (index(command, "|") != rindex(command, "|")) {
-			
-		//}
-		redirect('|', command);
+		int args, i = 0;
+		while(i < strlen(command)) {
+			if(command[i] == '|') {
+				args++;
+			}
+			i++;
+		}
+		if (args > 1) {
+			multipipe(command);
+		}
+		else {
+			redirect('|', command);
+		}
 	}
 
 	/*----------
@@ -298,6 +326,9 @@ void parse_Input(char* command){
 					exit(0);
 				}
 				else{
+					//execve(command,&command,getenv("PATH"));
+					//relPath = getenv("PATH");
+					//printf("new PATH variable: %s\n", relPath);
 					if((setenv("PATH",newPath,0))< 0){
 						printf("path set error\n");
 					}
@@ -536,7 +567,6 @@ void parse_Input(char* command){
 				if (args == NULL) {
 
 					int success = execlp(command, command, NULL);
-					//int success = execlpe(command, command, NULL, getenv("PATH"));
 					if (success == -1) {
 						printf("\nInvalid Command\nExecutable not found.\n");
 						exit(0);
@@ -553,8 +583,12 @@ void parse_Input(char* command){
 					int i = 0;
 					
 					action = strtok(command, " ");
+					action[strlen(action)] = '\0';
+					args[strlen(args)] = '\0';
 
 					int success = execlp(action, action, args, (char *)NULL);
+					//char* enviro = getenv("PATH");
+					//int success = execve(action, *args, envp[i]);
 
 					if (success == -1) {
 						printf("\nInvalid Command\nPerhaps the wrong arguments\nOr executable not found\n");
@@ -577,11 +611,6 @@ MAIN FUNCTION
 int main(int argc, char **argv, char **envp) {
 	char input[1024];
 	char* inputBuffer[32];
-	//pid_t my_pid;
-	//my_pid = getpid();
-	// for(int i=0; i<sizeof(envp); i++){
-	// 	printf("%s\n", envp[i]);
-	// }
 
 	printf("\n\n\n		Welcome to Quash		\n");
 	printf("	'help' for command options\n\n\n\n");
